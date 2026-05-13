@@ -1,0 +1,140 @@
+package storage
+
+import (
+	"context"
+	"path/filepath"
+	"testing"
+	"time"
+
+	analysisdomain "valorant-tactical-trainer/internal/domain/analysis"
+	matchdomain "valorant-tactical-trainer/internal/domain/match"
+	"valorant-tactical-trainer/internal/domain/player"
+)
+
+func newTestStore(t *testing.T) *Store {
+	t.Helper()
+
+	store, err := OpenPath(context.Background(), filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := store.Close(); err != nil {
+			t.Fatalf("close store: %v", err)
+		}
+	})
+
+	return store
+}
+
+func TestSavePlayerWithConsentAndCurrentPlayer(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	account := player.Account{PUUID: "p1", Name: "Player", Tag: "VN2", Region: "ap", AccountLevel: 42}
+	consent := player.Consent{PlayerPUUID: "p1", Name: "Player", Tag: "VN2", Region: "ap", Provider: "provider", ConsentVersion: player.ConsentVersion, ConsentedAt: time.Now().UTC()}
+
+	if err := store.SavePlayerWithConsent(ctx, account, consent); err != nil {
+		t.Fatalf("save player: %v", err)
+	}
+
+	current, ok, err := store.CurrentPlayer(ctx)
+	if err != nil {
+		t.Fatalf("current player: %v", err)
+	}
+	if !ok || current.PUUID != "p1" || current.AccountLevel != 42 {
+		t.Fatalf("unexpected current player: ok=%v player=%+v", ok, current)
+	}
+}
+
+func TestSaveMatchesDedupesByMatchAndPlayer(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+	seedPlayer(t, store)
+
+	matches := []matchdomain.Summary{{MatchID: "m1", PlayerPUUID: "p1", MapName: "Ascent", Kills: 10}}
+	if _, err := store.SaveMatches(ctx, matches); err != nil {
+		t.Fatalf("save matches: %v", err)
+	}
+	matches[0].Kills = 20
+	if _, err := store.SaveMatches(ctx, matches); err != nil {
+		t.Fatalf("save matches update: %v", err)
+	}
+
+	stored, err := store.MatchesForPlayer(ctx, "p1")
+	if err != nil {
+		t.Fatalf("list matches: %v", err)
+	}
+	if len(stored) != 1 || stored[0].Kills != 20 {
+		t.Fatalf("unexpected stored matches: %+v", stored)
+	}
+}
+
+func TestAPICacheExpires(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	if err := store.SaveAPICache(ctx, "k1", "endpoint", "payload", -time.Minute); err != nil {
+		t.Fatalf("save cache: %v", err)
+	}
+	if _, ok, err := store.APICache(ctx, "k1"); err != nil || ok {
+		t.Fatalf("expected expired cache miss, ok=%v err=%v", ok, err)
+	}
+
+	if err := store.SaveAPICache(ctx, "k1", "endpoint", "payload", time.Minute); err != nil {
+		t.Fatalf("save cache: %v", err)
+	}
+	payload, ok, err := store.APICache(ctx, "k1")
+	if err != nil || !ok || payload != "payload" {
+		t.Fatalf("expected cache hit, payload=%q ok=%v err=%v", payload, ok, err)
+	}
+}
+
+func TestSaveReportAndResetAll(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+	seedPlayer(t, store)
+
+	report := analysisdomain.Report{
+		PlayerPUUID:     "p1",
+		GeneratedAt:     time.Now().UTC(),
+		MatchCount:      1,
+		AverageKDA:      2,
+		HeadshotPercent: 20,
+		AverageDamage:   3000,
+		Summary:         "summary",
+		Findings:        []analysisdomain.Finding{{Type: "baseline", Severity: "low", Confidence: 0.7, Title: "title", Description: "desc", Evidence: []string{"e1"}}},
+		Recommendations: []analysisdomain.Recommendation{{Title: "rec", Drill: "drill", Priority: "low", Reason: "reason", Evidence: []string{"e1"}, Status: "new"}},
+	}
+	saved, err := store.SaveReport(ctx, report)
+	if err != nil {
+		t.Fatalf("save report: %v", err)
+	}
+	if saved.ID == 0 {
+		t.Fatal("expected report id")
+	}
+
+	if err := store.ResetAll(ctx); err != nil {
+		t.Fatalf("reset all: %v", err)
+	}
+	_, ok, err := store.CurrentPlayer(ctx)
+	if err != nil {
+		t.Fatalf("current player after reset: %v", err)
+	}
+	if ok {
+		t.Fatal("expected no current player after reset")
+	}
+}
+
+func seedPlayer(t *testing.T, store *Store) {
+	t.Helper()
+	account := player.Account{PUUID: "p1", Name: "Player", Tag: "VN2", Region: "ap"}
+	consent := player.Consent{PlayerPUUID: "p1", Name: "Player", Tag: "VN2", Region: "ap", Provider: "provider", ConsentVersion: player.ConsentVersion, ConsentedAt: time.Now().UTC()}
+	if err := store.SavePlayerWithConsent(context.Background(), account, consent); err != nil {
+		t.Fatalf("seed player: %v", err)
+	}
+}

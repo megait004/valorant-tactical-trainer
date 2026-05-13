@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
+    "validate": "pnpm lint && pnpm typecheck && pnpm build",
     "preview": "vite preview"
   },
   "dependencies": {

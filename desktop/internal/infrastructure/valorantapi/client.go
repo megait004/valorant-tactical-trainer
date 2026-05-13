@@ -40,6 +40,20 @@ func WithAPIKey(apiKey string) Option {
 	}
 }
 
+func WithBaseURL(baseURL string) Option {
+	return func(client *Client) {
+		client.baseURL = strings.TrimRight(baseURL, "/")
+	}
+}
+
+func WithHTTPClient(httpClient *http.Client) Option {
+	return func(client *Client) {
+		if httpClient != nil {
+			client.httpClient = httpClient
+		}
+	}
+}
+
 func NewClient(opts ...Option) *Client {
 	client := &Client{
 		baseURL: "https://api.henrikdev.xyz/valorant/v1",

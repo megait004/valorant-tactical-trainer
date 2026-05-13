@@ -31,7 +31,11 @@ func Open(ctx context.Context) (*Store, error) {
 		return nil, fmt.Errorf("create app data dir: %w", err)
 	}
 
-	db, err := sql.Open("sqlite", filepath.Join(appDir, "trainer.db"))
+	return OpenPath(ctx, filepath.Join(appDir, "trainer.db"))
+}
+
+func OpenPath(ctx context.Context, dbPath string) (*Store, error) {
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
