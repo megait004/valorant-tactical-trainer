@@ -4,11 +4,12 @@ import { GenerateReport } from '../wailsjs/go/wailsiface/AnalysisService';
 import { ListMatches, RefreshMatches } from '../wailsjs/go/wailsiface/MatchService';
 import { GetCurrentPlayer, LookupPlayer } from '../wailsjs/go/wailsiface/PlayerService';
 import { LatestRank, RefreshRank } from '../wailsjs/go/wailsiface/RankService';
-import { ResetAllData } from '../wailsjs/go/wailsiface/SettingsService';
+import { ClearExpiredCache, GetSettings, ResetAllData, SaveSettings } from '../wailsjs/go/wailsiface/SettingsService';
 import type { main, wailsiface } from '../wailsjs/go/models';
 import { AppHeader } from './components/AppHeader';
 import { MatchCachePanel } from './components/MatchCachePanel';
 import { SetupPanel } from './components/SetupPanel';
+import { SettingsPanel } from './components/SettingsPanel';
 
 const App = () => {
   const [appInfo, setAppInfo] = useState<main.AppInfo | null>(null);
@@ -17,6 +18,7 @@ const App = () => {
   const [matches, setMatches] = useState<wailsiface.MatchDTO[]>([]);
   const [rank, setRank] = useState<wailsiface.RankDTO | null>(null);
   const [report, setReport] = useState<wailsiface.ReportDTO | null>(null);
+  const [settings, setSettings] = useState<wailsiface.SettingsDTO | null>(null);
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [region, setRegion] = useState('ap');
@@ -27,11 +29,14 @@ const App = () => {
   const [rankLoading, setRankLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const [status, setStatus] = useState('Go core waiting for binding smoke');
 
   useEffect(() => {
     const loadCurrentPlayer = async () => {
       try {
+        const savedSettings = await GetSettings();
+        setSettings(savedSettings);
         const player = await GetCurrentPlayer();
         if (player) {
           setCurrentPlayer(player);
@@ -60,6 +65,44 @@ const App = () => {
     } catch (err) {
       setStatus('err: Go binding unavailable');
       console.error('err checking core', err);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSettingsLoading(true);
+    setStatus('saving settings...');
+
+    try {
+      const result = await SaveSettings({ apiKey });
+      setSettings(result);
+      setStatus(result.message);
+      if (apiKey.trim() === '') {
+        setApiKey('');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: save settings failed');
+      console.error('err saving settings', err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const clearExpiredCache = async () => {
+    setSettingsLoading(true);
+    setStatus('clearing expired cache...');
+
+    try {
+      const result = await ClearExpiredCache();
+      const refreshed = await GetSettings();
+      setSettings(refreshed);
+      setStatus(`${result.message}: ${result.cleared} removed`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: clear cache failed');
+      console.error('err clearing cache', err);
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
@@ -180,6 +223,8 @@ const App = () => {
       setTag('');
       setApiKey('');
       setConsent(false);
+      const refreshed = await GetSettings();
+      setSettings(refreshed);
       setStatus(result.message);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -226,7 +271,17 @@ const App = () => {
             resetLoading={resetLoading}
             tag={tag}
           />
-          <MatchCachePanel matches={matches} />
+          <div className="space-y-6">
+            <SettingsPanel
+              apiKey={apiKey}
+              loading={settingsLoading}
+              onApiKeyChange={setApiKey}
+              onClearExpiredCache={clearExpiredCache}
+              onSaveSettings={saveSettings}
+              settings={settings}
+            />
+            <MatchCachePanel matches={matches} />
+          </div>
         </div>
       </section>
     </main>

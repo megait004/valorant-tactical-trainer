@@ -94,6 +94,47 @@ func TestAPICacheExpires(t *testing.T) {
 	}
 }
 
+func TestSettingsStatsAndClearExpiredCache(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+	seedPlayer(t, store)
+
+	if store.Path() == "" {
+		t.Fatal("expected db path")
+	}
+	if err := store.SaveSetting(ctx, "api_key", "secret"); err != nil {
+		t.Fatalf("save setting: %v", err)
+	}
+	if err := store.SaveAPICache(ctx, "expired", "endpoint", "payload", -time.Minute); err != nil {
+		t.Fatalf("save expired cache: %v", err)
+	}
+	if err := store.SaveAPICache(ctx, "fresh", "endpoint", "payload", time.Minute); err != nil {
+		t.Fatalf("save fresh cache: %v", err)
+	}
+
+	stats, err := store.Stats(ctx)
+	if err != nil {
+		t.Fatalf("stats: %v", err)
+	}
+	if stats.Players != 1 || stats.CacheEntries != 2 || stats.ExpiredCacheEntries != 1 {
+		t.Fatalf("unexpected stats: %+v", stats)
+	}
+	cleared, err := store.ClearExpiredAPICache(ctx)
+	if err != nil {
+		t.Fatalf("clear expired cache: %v", err)
+	}
+	if cleared != 1 {
+		t.Fatalf("expected 1 cleared cache entry, got %d", cleared)
+	}
+	if err := store.DeleteSetting(ctx, "api_key"); err != nil {
+		t.Fatalf("delete setting: %v", err)
+	}
+	if _, ok, err := store.Setting(ctx, "api_key"); err != nil || ok {
+		t.Fatalf("expected api key gone, ok=%v err=%v", ok, err)
+	}
+}
+
 func TestSaveAndReadLatestRankSnapshot(t *testing.T) {
 	t.Parallel()
 	store := newTestStore(t)

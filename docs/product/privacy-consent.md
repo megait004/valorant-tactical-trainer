@@ -63,3 +63,5 @@ API key is optional for MVP.
 If provided, it is stored locally only and used by the Go API adapter.
 
 The frontend must not send the API key to any endpoint except through Wails-bound local Go services.
+
+Settings UI may show whether an API key is configured, but must not display the stored API key value after saving.

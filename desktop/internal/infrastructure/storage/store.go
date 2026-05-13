@@ -18,7 +18,8 @@ import (
 )
 
 type Store struct {
-	db *sql.DB
+	db   *sql.DB
+	path string
 }
 
 func Open(ctx context.Context) (*Store, error) {
@@ -41,7 +42,7 @@ func OpenPath(ctx context.Context, dbPath string) (*Store, error) {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
 
-	store := &Store{db: db}
+	store := &Store{db: db, path: dbPath}
 	if err := store.migrate(ctx); err != nil {
 		db.Close()
 		return nil, err
@@ -137,6 +138,22 @@ func (store *Store) SaveSetting(ctx context.Context, key string, value string) e
 	return nil
 }
 
+func (store *Store) DeleteSetting(ctx context.Context, key string) error {
+	if _, err := store.db.ExecContext(ctx, `delete from settings where key = ?`, key); err != nil {
+		return fmt.Errorf("delete setting: %w", err)
+	}
+
+	return nil
+}
+
+func (store *Store) Path() string {
+	if store == nil {
+		return ""
+	}
+
+	return store.path
+}
+
 func (store *Store) SaveAPICache(ctx context.Context, key string, endpoint string, payload string, ttl time.Duration) error {
 	now := time.Now().UTC()
 	_, err := store.db.ExecContext(ctx, `
@@ -170,6 +187,58 @@ func (store *Store) APICache(ctx context.Context, key string) (string, bool, err
 	}
 
 	return payload, true, nil
+}
+
+func (store *Store) ClearExpiredAPICache(ctx context.Context) (int, error) {
+	result, err := store.db.ExecContext(ctx, `delete from api_cache where expires_at < ?`, time.Now().UTC())
+	if err != nil {
+		return 0, fmt.Errorf("clear expired api cache: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("read cleared cache count: %w", err)
+	}
+
+	return int(rows), nil
+}
+
+type DataStats struct {
+	CacheEntries        int
+	ExpiredCacheEntries int
+	Players             int
+	Matches             int
+	RankSnapshots       int
+	Reports             int
+}
+
+func (store *Store) Stats(ctx context.Context) (DataStats, error) {
+	stats := DataStats{}
+	counts := []struct {
+		query string
+		value *int
+	}{
+		{`select count(*) from api_cache`, &stats.CacheEntries},
+		{`select count(*) from api_cache where expires_at < ?`, &stats.ExpiredCacheEntries},
+		{`select count(*) from players`, &stats.Players},
+		{`select count(*) from matches`, &stats.Matches},
+		{`select count(*) from rank_snapshots`, &stats.RankSnapshots},
+		{`select count(*) from analysis_reports`, &stats.Reports},
+	}
+
+	for _, count := range counts {
+		var err error
+		if count.query == `select count(*) from api_cache where expires_at < ?` {
+			err = store.db.QueryRowContext(ctx, count.query, time.Now().UTC()).Scan(count.value)
+		} else {
+			err = store.db.QueryRowContext(ctx, count.query).Scan(count.value)
+		}
+		if err != nil {
+			return DataStats{}, fmt.Errorf("read stats: %w", err)
+		}
+	}
+
+	return stats, nil
 }
 
 func (store *Store) SaveMatches(ctx context.Context, summaries []matchdomain.Summary) (int, error) {

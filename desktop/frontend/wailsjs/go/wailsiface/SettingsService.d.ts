@@ -3,6 +3,12 @@
 import {wailsiface} from '../models';
 import {context} from '../models';
 
+export function ClearExpiredCache():Promise<wailsiface.ClearCacheResult>;
+
+export function GetSettings():Promise<wailsiface.SettingsDTO>;
+
 export function ResetAllData():Promise<wailsiface.ResetResult>;
+
+export function SaveSettings(arg1:wailsiface.SaveSettingsInput):Promise<wailsiface.SettingsDTO>;
 
 export function Startup(arg1:context.Context):Promise<void>;

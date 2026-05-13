@@ -21,6 +21,20 @@ export namespace main {
 
 export namespace wailsiface {
 	
+	export class ClearCacheResult {
+	    cleared: number;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ClearCacheResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cleared = source["cleared"];
+	        this.message = source["message"];
+	    }
+	}
 	export class FindingDTO {
 	    type: string;
 	    severity: string;
@@ -375,6 +389,46 @@ export namespace wailsiface {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.message = source["message"];
+	    }
+	}
+	export class SaveSettingsInput {
+	    apiKey: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SaveSettingsInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.apiKey = source["apiKey"];
+	    }
+	}
+	export class SettingsDTO {
+	    apiKeyConfigured: boolean;
+	    dataPath: string;
+	    cacheEntries: number;
+	    expiredCacheEntries: number;
+	    players: number;
+	    matches: number;
+	    rankSnapshots: number;
+	    reports: number;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SettingsDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.apiKeyConfigured = source["apiKeyConfigured"];
+	        this.dataPath = source["dataPath"];
+	        this.cacheEntries = source["cacheEntries"];
+	        this.expiredCacheEntries = source["expiredCacheEntries"];
+	        this.players = source["players"];
+	        this.matches = source["matches"];
+	        this.rankSnapshots = source["rankSnapshots"];
+	        this.reports = source["reports"];
 	        this.message = source["message"];
 	    }
 	}

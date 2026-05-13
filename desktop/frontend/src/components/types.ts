@@ -38,6 +38,15 @@ export type MatchCachePanelProps = {
   matches: wailsiface.MatchDTO[];
 };
 
+export type SettingsPanelProps = {
+  apiKey: string;
+  loading: boolean;
+  settings: wailsiface.SettingsDTO | null;
+  onApiKeyChange: (value: string) => void;
+  onClearExpiredCache: () => void;
+  onSaveSettings: () => void;
+};
+
 export type ReportPanelProps = {
   report: wailsiface.ReportDTO;
 };

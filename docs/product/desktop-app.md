@@ -96,6 +96,8 @@ Settings screen:
 - API key.
 - Region.
 - Cache info.
+- Expired cache cleanup.
+- Local SQLite data path and local data counts.
 - Export data.
 - Reset data.
 - Consent/data explanation.
@@ -108,6 +110,7 @@ Initial services:
 - `MatchService`
 - `AnalysisService`
 - `SettingsService`
+- `RankService`
 
 Service methods should return UI-safe DTOs and errors that can be shown naturally.
 
