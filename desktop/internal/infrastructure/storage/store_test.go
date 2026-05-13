@@ -9,6 +9,7 @@ import (
 	analysisdomain "valorant-tactical-trainer/internal/domain/analysis"
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
 	"valorant-tactical-trainer/internal/domain/player"
+	"valorant-tactical-trainer/internal/domain/rank"
 )
 
 func newTestStore(t *testing.T) *Store {
@@ -93,6 +94,30 @@ func TestAPICacheExpires(t *testing.T) {
 	}
 }
 
+func TestSaveAndReadLatestRankSnapshot(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+	seedPlayer(t, store)
+
+	oldSnapshot := rank.Snapshot{PlayerPUUID: "p1", Region: "ap", TierName: "Gold 3", RankingInTier: 90, FetchedAt: time.Now().UTC().Add(-time.Hour)}
+	newSnapshot := rank.Snapshot{PlayerPUUID: "p1", Region: "ap", TierName: "Platinum 1", RankingInTier: 12, Elo: 1312, FetchedAt: time.Now().UTC()}
+	if err := store.SaveRankSnapshot(ctx, oldSnapshot); err != nil {
+		t.Fatalf("save old rank: %v", err)
+	}
+	if err := store.SaveRankSnapshot(ctx, newSnapshot); err != nil {
+		t.Fatalf("save new rank: %v", err)
+	}
+
+	latest, ok, err := store.LatestRankSnapshot(ctx, "p1")
+	if err != nil {
+		t.Fatalf("latest rank: %v", err)
+	}
+	if !ok || latest.TierName != "Platinum 1" || latest.Elo != 1312 {
+		t.Fatalf("unexpected latest rank: ok=%v rank=%+v", ok, latest)
+	}
+}
+
 func TestSaveReportAndResetAll(t *testing.T) {
 	t.Parallel()
 	store := newTestStore(t)
@@ -117,6 +142,9 @@ func TestSaveReportAndResetAll(t *testing.T) {
 	if saved.ID == 0 {
 		t.Fatal("expected report id")
 	}
+	if err := store.SaveRankSnapshot(ctx, rank.Snapshot{PlayerPUUID: "p1", Region: "ap", TierName: "Gold 1", FetchedAt: time.Now().UTC()}); err != nil {
+		t.Fatalf("save rank before reset: %v", err)
+	}
 
 	if err := store.ResetAll(ctx); err != nil {
 		t.Fatalf("reset all: %v", err)
@@ -127,6 +155,13 @@ func TestSaveReportAndResetAll(t *testing.T) {
 	}
 	if ok {
 		t.Fatal("expected no current player after reset")
+	}
+	_, ok, err = store.LatestRankSnapshot(ctx, "p1")
+	if err != nil {
+		t.Fatalf("latest rank after reset: %v", err)
+	}
+	if ok {
+		t.Fatal("expected no rank after reset")
 	}
 }
 

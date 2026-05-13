@@ -15,6 +15,7 @@ import (
 
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
 	"valorant-tactical-trainer/internal/domain/player"
+	"valorant-tactical-trainer/internal/domain/rank"
 )
 
 const providerName = "Henrik unofficial VALORANT API"
@@ -244,6 +245,69 @@ func (client *Client) MatchesByPUUID(ctx context.Context, puuid string, region s
 	return summaries, string(body), nil
 }
 
+func (client *Client) MMRByPUUID(ctx context.Context, puuid string, region string) (rank.Snapshot, string, error) {
+	normalizedRegion := player.NormalizeRegion(region)
+	endpoint := fmt.Sprintf("%s/by-puuid/mmr/%s/%s", strings.Replace(client.baseURL, "/v1", "/v2", 1), url.PathEscape(normalizedRegion), url.PathEscape(strings.TrimSpace(puuid)))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return rank.Snapshot{}, "", fmt.Errorf("create mmr request: %w", err)
+	}
+
+	if client.apiKey != "" {
+		req.Header.Set("Authorization", client.apiKey)
+	}
+
+	resp, err := client.do(req)
+	if err != nil {
+		return rank.Snapshot{}, "", fmt.Errorf("%w: %v", ErrProviderUnavailable, err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+	case http.StatusTooManyRequests:
+		return rank.Snapshot{}, "", ErrRateLimited
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return rank.Snapshot{}, "", ErrUnauthorizedAPIKey
+	case http.StatusNotFound:
+		return rank.Snapshot{}, "", ErrNotFound
+	default:
+		if resp.StatusCode >= 500 {
+			return rank.Snapshot{}, "", ErrProviderUnavailable
+		}
+		return rank.Snapshot{}, "", fmt.Errorf("provider status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return rank.Snapshot{}, "", fmt.Errorf("%w: %v", ErrDecodeFailed, err)
+	}
+
+	var payload mmrResponse
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return rank.Snapshot{}, "", fmt.Errorf("%w: %v", ErrDecodeFailed, err)
+	}
+
+	snapshot := rank.Snapshot{
+		PlayerPUUID:     strings.TrimSpace(puuid),
+		Region:          normalizedRegion,
+		Tier:            payload.Data.CurrentTier,
+		TierName:        payload.Data.CurrentTierPatched,
+		RankingInTier:   payload.Data.RankingInTier,
+		MMRChangeToLast: payload.Data.MMRChangeToLastGame,
+		Elo:             payload.Data.Elo,
+		SeasonID:        payload.Data.SeasonID,
+		FetchedAt:       time.Now().UTC(),
+		RawJSON:         string(body),
+	}
+
+	if snapshot.TierName == "" && payload.Data.Images.Small != "" {
+		snapshot.TierName = payload.Data.Images.Small
+	}
+
+	return snapshot, string(body), nil
+}
+
 func ProviderName() string {
 	return providerName
 }
@@ -336,6 +400,21 @@ type matchesResponse struct {
 				DamageMade int `json:"damage_made"`
 			} `json:"all_players"`
 		} `json:"players"`
+	} `json:"data"`
+}
+
+type mmrResponse struct {
+	Status int `json:"status"`
+	Data   struct {
+		CurrentTier         int    `json:"currenttier"`
+		CurrentTierPatched  string `json:"currenttierpatched"`
+		RankingInTier       int    `json:"ranking_in_tier"`
+		MMRChangeToLastGame int    `json:"mmr_change_to_last_game"`
+		Elo                 int    `json:"elo"`
+		SeasonID            string `json:"season_id"`
+		Images              struct {
+			Small string `json:"small"`
+		} `json:"images"`
 	} `json:"data"`
 }
 

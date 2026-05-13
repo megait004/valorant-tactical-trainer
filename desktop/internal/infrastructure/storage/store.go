@@ -12,6 +12,7 @@ import (
 	analysisdomain "valorant-tactical-trainer/internal/domain/analysis"
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
 	"valorant-tactical-trainer/internal/domain/player"
+	"valorant-tactical-trainer/internal/domain/rank"
 
 	_ "modernc.org/sqlite"
 )
@@ -227,6 +228,41 @@ func (store *Store) SaveMatches(ctx context.Context, summaries []matchdomain.Sum
 	return inserted, nil
 }
 
+func (store *Store) SaveRankSnapshot(ctx context.Context, snapshot rank.Snapshot) error {
+	if snapshot.FetchedAt.IsZero() {
+		snapshot.FetchedAt = time.Now().UTC()
+	}
+
+	_, err := store.db.ExecContext(ctx, `
+		insert into rank_snapshots (player_puuid, region, tier, tier_name, ranking_in_tier, mmr_change_to_last, elo, season_id, fetched_at, raw_json)
+		values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, snapshot.PlayerPUUID, snapshot.Region, snapshot.Tier, snapshot.TierName, snapshot.RankingInTier, snapshot.MMRChangeToLast, snapshot.Elo, snapshot.SeasonID, snapshot.FetchedAt, snapshot.RawJSON)
+	if err != nil {
+		return fmt.Errorf("save rank snapshot: %w", err)
+	}
+
+	return nil
+}
+
+func (store *Store) LatestRankSnapshot(ctx context.Context, puuid string) (rank.Snapshot, bool, error) {
+	var snapshot rank.Snapshot
+	err := store.db.QueryRowContext(ctx, `
+		select player_puuid, region, tier, tier_name, ranking_in_tier, mmr_change_to_last, elo, season_id, fetched_at, raw_json
+		from rank_snapshots
+		where player_puuid = ?
+		order by fetched_at desc, id desc
+		limit 1
+	`, puuid).Scan(&snapshot.PlayerPUUID, &snapshot.Region, &snapshot.Tier, &snapshot.TierName, &snapshot.RankingInTier, &snapshot.MMRChangeToLast, &snapshot.Elo, &snapshot.SeasonID, &snapshot.FetchedAt, &snapshot.RawJSON)
+	if errors.Is(err, sql.ErrNoRows) {
+		return rank.Snapshot{}, false, nil
+	}
+	if err != nil {
+		return rank.Snapshot{}, false, fmt.Errorf("read latest rank snapshot: %w", err)
+	}
+
+	return snapshot, true, nil
+}
+
 func (store *Store) MatchesForPlayer(ctx context.Context, puuid string) ([]matchdomain.Summary, error) {
 	rows, err := store.db.QueryContext(ctx, `
 		select match_id, player_puuid, map_name, mode, queue, season_id, region, cluster,
@@ -304,7 +340,7 @@ func (store *Store) SaveReport(ctx context.Context, report analysisdomain.Report
 }
 
 func (store *Store) ResetAll(ctx context.Context) error {
-	tables := []string{"training_recommendations", "analysis_findings", "analysis_reports", "matches", "api_cache", "consents", "players", "settings"}
+	tables := []string{"training_recommendations", "analysis_findings", "analysis_reports", "rank_snapshots", "matches", "api_cache", "consents", "players", "settings"}
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin reset: %w", err)
@@ -396,6 +432,20 @@ func (store *Store) migrate(ctx context.Context) error {
 			created_at datetime not null,
 			updated_at datetime not null,
 			primary key(match_id, player_puuid),
+			foreign key(player_puuid) references players(puuid)
+		)`,
+		`create table if not exists rank_snapshots (
+			id integer primary key autoincrement,
+			player_puuid text not null,
+			region text not null default '',
+			tier integer not null default 0,
+			tier_name text not null default '',
+			ranking_in_tier integer not null default 0,
+			mmr_change_to_last integer not null default 0,
+			elo integer not null default 0,
+			season_id text not null default '',
+			fetched_at datetime not null,
+			raw_json text not null default '',
 			foreign key(player_puuid) references players(puuid)
 		)`,
 		`create table if not exists analysis_reports (

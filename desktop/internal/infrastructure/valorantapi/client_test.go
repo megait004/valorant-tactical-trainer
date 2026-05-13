@@ -112,6 +112,41 @@ func TestMatchesByPUUID(t *testing.T) {
 	}
 }
 
+func TestMMRByPUUID(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/by-puuid/mmr/ap/p1" {
+			t.Fatalf("unexpected path %s", request.URL.Path)
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{
+			"status": 200,
+			"data": {
+				"currenttier": 18,
+				"currenttierpatched": "Diamond 1",
+				"ranking_in_tier": 67,
+				"mmr_change_to_last_game": 14,
+				"elo": 1467,
+				"season_id": "s1"
+			}
+		}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(WithBaseURL(server.URL))
+	snapshot, raw, err := client.MMRByPUUID(context.Background(), "p1", "ap")
+	if err != nil {
+		t.Fatalf("mmr by puuid: %v", err)
+	}
+	if raw == "" {
+		t.Fatal("expected raw payload")
+	}
+	if snapshot.TierName != "Diamond 1" || snapshot.RankingInTier != 67 || snapshot.Elo != 1467 {
+		t.Fatalf("unexpected snapshot: %+v", snapshot)
+	}
+}
+
 func TestRateLimiterWaitsBetweenRequests(t *testing.T) {
 	t.Parallel()
 

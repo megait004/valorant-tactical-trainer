@@ -29,3 +29,4 @@ This backlog tracks the initial Valorant Tactical Trainer buildout. Create detai
 | US-009 | E06 | Build dashboard and match list UI | normal | implemented |
 | US-010 | E07 | Add validation and release build flow | normal | implemented |
 | US-011 | E03 | Add provider throttle | high-risk | implemented |
+| US-012 | E03 | Fetch and display current rank | high-risk | implemented |

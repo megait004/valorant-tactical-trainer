@@ -45,7 +45,7 @@ Domain and React code must not depend on provider DTOs.
 - Account by PUUID.
 - Matches by PUUID.
 - Lifetime matches by PUUID.
-- MMR by PUUID.
+- MMR by PUUID: `/valorant/v2/by-puuid/mmr/{region}/{puuid}` through the Go adapter.
 - MMR history by PUUID.
 - Content metadata.
 

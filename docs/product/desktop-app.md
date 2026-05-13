@@ -57,6 +57,7 @@ Dashboard screen:
 - Import status.
 - Match count.
 - Latest MMR when available.
+- Latest rank/MMR card with tier, RR, elo, last-game delta, region, and fetch time.
 - Top findings.
 - Latest recommendations.
 - Rate-limit status.

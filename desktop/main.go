@@ -26,6 +26,7 @@ func main() {
 	defer store.Close()
 	playerService := wailsiface.NewPlayerService(store)
 	matchService := wailsiface.NewMatchService(store)
+	rankService := wailsiface.NewRankService(store)
 	analysisService := wailsiface.NewAnalysisService(store)
 	settingsService := wailsiface.NewSettingsService(store)
 
@@ -46,6 +47,7 @@ func main() {
 			app,
 			playerService,
 			matchService,
+			rankService,
 			analysisService,
 			settingsService,
 		},

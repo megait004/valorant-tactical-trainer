@@ -15,6 +15,8 @@ export type SetupPanelProps = {
   matchLoading: boolean;
   name: string;
   region: string;
+  rank: wailsiface.RankDTO | null;
+  rankLoading: boolean;
   report: wailsiface.ReportDTO | null;
   reportLoading: boolean;
   resetLoading: boolean;
@@ -26,6 +28,7 @@ export type SetupPanelProps = {
   onLookupPlayer: () => void;
   onNameChange: (value: string) => void;
   onRefreshMatches: () => void;
+  onRefreshRank: () => void;
   onRegionChange: (value: string) => void;
   onResetAllData: () => void;
   onTagChange: (value: string) => void;

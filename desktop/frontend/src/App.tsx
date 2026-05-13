@@ -3,6 +3,7 @@ import { AppInfo } from '../wailsjs/go/main/App';
 import { GenerateReport } from '../wailsjs/go/wailsiface/AnalysisService';
 import { ListMatches, RefreshMatches } from '../wailsjs/go/wailsiface/MatchService';
 import { GetCurrentPlayer, LookupPlayer } from '../wailsjs/go/wailsiface/PlayerService';
+import { LatestRank, RefreshRank } from '../wailsjs/go/wailsiface/RankService';
 import { ResetAllData } from '../wailsjs/go/wailsiface/SettingsService';
 import type { main, wailsiface } from '../wailsjs/go/models';
 import { AppHeader } from './components/AppHeader';
@@ -14,6 +15,7 @@ const App = () => {
   const [currentPlayer, setCurrentPlayer] = useState<wailsiface.PlayerDTO | null>(null);
   const [lookupResult, setLookupResult] = useState<wailsiface.LookupPlayerResult | null>(null);
   const [matches, setMatches] = useState<wailsiface.MatchDTO[]>([]);
+  const [rank, setRank] = useState<wailsiface.RankDTO | null>(null);
   const [report, setReport] = useState<wailsiface.ReportDTO | null>(null);
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
@@ -22,6 +24,7 @@ const App = () => {
   const [consent, setConsent] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [matchLoading, setMatchLoading] = useState(false);
+  const [rankLoading, setRankLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [status, setStatus] = useState('Go core waiting for binding smoke');
@@ -35,6 +38,8 @@ const App = () => {
           setStatus(`current player: ${player.name}#${player.tag}`);
           const savedMatches = await ListMatches(player.puuid);
           setMatches(savedMatches);
+          const savedRank = await LatestRank(player.puuid);
+          setRank(savedRank);
         }
       } catch (err) {
         setStatus('err: current player unavailable');
@@ -69,6 +74,8 @@ const App = () => {
       setCurrentPlayer(result.player);
       const savedMatches = await ListMatches(result.player.puuid);
       setMatches(savedMatches);
+      const savedRank = await LatestRank(result.player.puuid);
+      setRank(savedRank);
       setStatus(result.message || 'data received');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -128,6 +135,32 @@ const App = () => {
     }
   };
 
+  const refreshRank = async () => {
+    if (!currentPlayer) {
+      setStatus('err: lookup player first');
+      return;
+    }
+
+    setRankLoading(true);
+    setStatus('refreshing rank...');
+
+    try {
+      const result = await RefreshRank({
+        puuid: currentPlayer.puuid,
+        region: currentPlayer.region || region,
+        apiKey,
+      });
+      setRank(result.rank);
+      setStatus(`${result.message}: ${result.rank.tierName || 'rank unknown'}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: refresh rank failed');
+      console.error('err refresh rank', err);
+    } finally {
+      setRankLoading(false);
+    }
+  };
+
   const resetAllData = async () => {
     setResetLoading(true);
     setStatus('resetting local data...');
@@ -141,6 +174,7 @@ const App = () => {
       setCurrentPlayer(null);
       setLookupResult(null);
       setMatches([]);
+      setRank(null);
       setReport(null);
       setName('');
       setTag('');
@@ -180,10 +214,13 @@ const App = () => {
             onLookupPlayer={lookupPlayer}
             onNameChange={setName}
             onRefreshMatches={refreshMatches}
+            onRefreshRank={refreshRank}
             onRegionChange={setRegion}
             onResetAllData={resetAllData}
             onTagChange={setTag}
             region={region}
+            rank={rank}
+            rankLoading={rankLoading}
             report={report}
             reportLoading={reportLoading}
             resetLoading={resetLoading}

@@ -11,6 +11,8 @@ export const SetupPanel = ({
   lookupResult,
   matchLoading,
   name,
+  rank,
+  rankLoading,
   region,
   report,
   reportLoading,
@@ -23,6 +25,7 @@ export const SetupPanel = ({
   onLookupPlayer,
   onNameChange,
   onRefreshMatches,
+  onRefreshRank,
   onRegionChange,
   onResetAllData,
   onTagChange,
@@ -123,6 +126,14 @@ export const SetupPanel = ({
         {matchLoading ? 'Refreshing...' : 'Refresh matches'}
       </button>
       <button
+        className="rounded-full border border-emerald-300/40 px-5 py-3 text-sm font-bold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
+        disabled={!currentPlayer || rankLoading}
+        onClick={onRefreshRank}
+        type="button"
+      >
+        {rankLoading ? 'Refreshing rank...' : 'Refresh rank'}
+      </button>
+      <button
         className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
         disabled={!currentPlayer || reportLoading}
         onClick={onGenerateReport}
@@ -152,6 +163,19 @@ export const SetupPanel = ({
               Region {currentPlayer.region || region.toUpperCase()} · Level {currentPlayer.accountLevel || 'unknown'}
             </p>
             <p className="mt-2 break-all text-xs text-slate-500">PUUID: {currentPlayer.puuid}</p>
+          </div>
+        )}
+        {rank && (
+          <div className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 p-5">
+            <p className="text-sm font-semibold text-emerald-200">latest rank</p>
+            <h3 className="mt-2 text-2xl font-bold text-white">{rank.tierName || 'Unrated / unknown'}</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              {rank.rankingInTier} RR · elo {rank.elo || 'unknown'} · last game {rank.mmrChangeToLast > 0 ? '+' : ''}
+              {rank.mmrChangeToLast}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Region {rank.region || region.toUpperCase()} · fetched {rank.fetchedAt || 'unknown'}
+            </p>
           </div>
         )}
         {lookupResult && (
