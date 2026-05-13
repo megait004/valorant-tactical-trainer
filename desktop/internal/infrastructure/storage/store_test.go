@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"testing"
 	"time"
@@ -135,6 +136,41 @@ func TestSettingsStatsAndClearExpiredCache(t *testing.T) {
 	}
 }
 
+func TestExportJSONExcludesAPIKeyValue(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+	seedPlayer(t, store)
+
+	if err := store.SaveSetting(ctx, "api_key", "secret-key"); err != nil {
+		t.Fatalf("save api key: %v", err)
+	}
+	if _, err := store.SaveMatches(ctx, []matchdomain.Summary{{MatchID: "m1", PlayerPUUID: "p1", MapName: "Ascent", RawJSON: "provider secret payload"}}); err != nil {
+		t.Fatalf("save match: %v", err)
+	}
+
+	data, err := store.ExportJSON(ctx)
+	if err != nil {
+		t.Fatalf("export json: %v", err)
+	}
+	if string(data) == "" {
+		t.Fatal("expected export data")
+	}
+	if json.Valid(data) == false {
+		t.Fatalf("expected valid json: %s", string(data))
+	}
+	if contains(string(data), "secret-key") || contains(string(data), "provider secret payload") {
+		t.Fatalf("export leaked secret/raw payload: %s", string(data))
+	}
+	var snapshot ExportSnapshot
+	if err := json.Unmarshal(data, &snapshot); err != nil {
+		t.Fatalf("decode export: %v", err)
+	}
+	if !snapshot.APIKeyConfigured || len(snapshot.Players) != 1 || len(snapshot.Matches) != 1 {
+		t.Fatalf("unexpected export snapshot: %+v", snapshot)
+	}
+}
+
 func TestSaveAndReadLatestRankSnapshot(t *testing.T) {
 	t.Parallel()
 	store := newTestStore(t)
@@ -213,4 +249,13 @@ func seedPlayer(t *testing.T, store *Store) {
 	if err := store.SavePlayerWithConsent(context.Background(), account, consent); err != nil {
 		t.Fatalf("seed player: %v", err)
 	}
+}
+
+func contains(value string, needle string) bool {
+	for index := 0; index+len(needle) <= len(value); index++ {
+		if value[index:index+len(needle)] == needle {
+			return true
+		}
+	}
+	return false
 }

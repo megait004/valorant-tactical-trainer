@@ -5,6 +5,8 @@ import {context} from '../models';
 
 export function ClearExpiredCache():Promise<wailsiface.ClearCacheResult>;
 
+export function ExportLocalData():Promise<wailsiface.ExportDataResult>;
+
 export function GetSettings():Promise<wailsiface.SettingsDTO>;
 
 export function ResetAllData():Promise<wailsiface.ResetResult>;

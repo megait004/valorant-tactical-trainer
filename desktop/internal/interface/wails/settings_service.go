@@ -3,7 +3,9 @@ package wailsiface
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"valorant-tactical-trainer/internal/infrastructure/storage"
 
@@ -48,6 +50,11 @@ type ClearCacheResult struct {
 	Message string `json:"message"`
 }
 
+type ExportDataResult struct {
+	Path    string `json:"path"`
+	Message string `json:"message"`
+}
+
 func (service *SettingsService) GetSettings() (SettingsDTO, error) {
 	return service.settingsDTO("settings loaded")
 }
@@ -75,6 +82,38 @@ func (service *SettingsService) ClearExpiredCache() (ClearCacheResult, error) {
 	}
 
 	return ClearCacheResult{Cleared: cleared, Message: "expired cache cleared"}, nil
+}
+
+func (service *SettingsService) ExportLocalData() (ExportDataResult, error) {
+	if service.ctx == nil {
+		return ExportDataResult{}, fmt.Errorf("ExportUnavailable: desktop context not ready")
+	}
+
+	path, err := runtime.SaveFileDialog(service.ctx, runtime.SaveDialogOptions{
+		Title:           "Export Valorant Tactical Trainer data",
+		DefaultFilename: fmt.Sprintf("valorant-tactical-trainer-export-%s.json", time.Now().Format("20060102-150405")),
+		Filters: []runtime.FileFilter{{
+			DisplayName: "JSON files (*.json)",
+			Pattern:     "*.json",
+		}},
+		CanCreateDirectories: true,
+	})
+	if err != nil {
+		return ExportDataResult{}, fmt.Errorf("err showing export dialog: %w", err)
+	}
+	if path == "" {
+		return ExportDataResult{Message: "export cancelled"}, nil
+	}
+
+	data, err := service.store.ExportJSON(context.Background())
+	if err != nil {
+		return ExportDataResult{}, err
+	}
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		return ExportDataResult{}, fmt.Errorf("write export file: %w", err)
+	}
+
+	return ExportDataResult{Path: path, Message: "local data exported"}, nil
 }
 
 func (service *SettingsService) ResetAllData() (ResetResult, error) {

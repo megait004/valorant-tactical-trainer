@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -20,6 +21,20 @@ import (
 type Store struct {
 	db   *sql.DB
 	path string
+}
+
+type ExportSnapshot struct {
+	ExportedAt       time.Time        `json:"exportedAt"`
+	SchemaVersion    int              `json:"schemaVersion"`
+	APIKeyConfigured bool             `json:"apiKeyConfigured"`
+	Stats            DataStats        `json:"stats"`
+	Players          []map[string]any `json:"players"`
+	Consents         []map[string]any `json:"consents"`
+	Matches          []map[string]any `json:"matches"`
+	RankSnapshots    []map[string]any `json:"rankSnapshots"`
+	AnalysisReports  []map[string]any `json:"analysisReports"`
+	AnalysisFindings []map[string]any `json:"analysisFindings"`
+	Recommendations  []map[string]any `json:"recommendations"`
 }
 
 func Open(ctx context.Context) (*Store, error) {
@@ -239,6 +254,103 @@ func (store *Store) Stats(ctx context.Context) (DataStats, error) {
 	}
 
 	return stats, nil
+}
+
+func (store *Store) ExportSnapshot(ctx context.Context) (ExportSnapshot, error) {
+	stats, err := store.Stats(ctx)
+	if err != nil {
+		return ExportSnapshot{}, err
+	}
+	_, hasAPIKey, err := store.Setting(ctx, "api_key")
+	if err != nil {
+		return ExportSnapshot{}, err
+	}
+
+	snapshot := ExportSnapshot{ExportedAt: time.Now().UTC(), SchemaVersion: 1, APIKeyConfigured: hasAPIKey, Stats: stats}
+	if snapshot.Players, err = store.exportRows(ctx, `select puuid, name, tag, region, account_level, card_small, card_large, last_update, created_at, updated_at from players order by updated_at desc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.Consents, err = store.exportRows(ctx, `select id, player_puuid, name, tag, region, provider, consent_version, consented_at, revoked_at from consents order by consented_at desc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.Matches, err = store.exportRows(ctx, `select match_id, player_puuid, map_name, mode, queue, season_id, region, cluster, game_start, game_length, rounds_played, agent, team, kills, deaths, assists, headshots, bodyshots, legshots, damage_made, created_at, updated_at from matches order by game_start desc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.RankSnapshots, err = store.exportRows(ctx, `select id, player_puuid, region, tier, tier_name, ranking_in_tier, mmr_change_to_last, elo, season_id, fetched_at from rank_snapshots order by fetched_at desc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.AnalysisReports, err = store.exportRows(ctx, `select id, player_puuid, generated_at, match_count, average_kda, headshot_percent, average_damage, top_agent, top_map, summary from analysis_reports order by generated_at desc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.AnalysisFindings, err = store.exportRows(ctx, `select id, report_id, type, severity, confidence, title, description, evidence from analysis_findings order by id asc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+	if snapshot.Recommendations, err = store.exportRows(ctx, `select id, report_id, title, drill, priority, reason, evidence, status, created_at, updated_at from training_recommendations order by id asc`); err != nil {
+		return ExportSnapshot{}, err
+	}
+
+	return snapshot, nil
+}
+
+func (store *Store) ExportJSON(ctx context.Context) ([]byte, error) {
+	snapshot, err := store.ExportSnapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.MarshalIndent(snapshot, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("encode export json: %w", err)
+	}
+
+	return data, nil
+}
+
+func (store *Store) exportRows(ctx context.Context, query string) ([]map[string]any, error) {
+	rows, err := store.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query export rows: %w", err)
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("read export columns: %w", err)
+	}
+
+	result := []map[string]any{}
+	for rows.Next() {
+		values := make([]any, len(columns))
+		pointers := make([]any, len(columns))
+		for index := range values {
+			pointers[index] = &values[index]
+		}
+		if err := rows.Scan(pointers...); err != nil {
+			return nil, fmt.Errorf("scan export row: %w", err)
+		}
+
+		row := map[string]any{}
+		for index, column := range columns {
+			row[column] = normalizeExportValue(values[index])
+		}
+		result = append(result, row)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate export rows: %w", err)
+	}
+
+	return result, nil
+}
+
+func normalizeExportValue(value any) any {
+	switch typed := value.(type) {
+	case []byte:
+		return string(typed)
+	case time.Time:
+		return typed.Format(time.RFC3339)
+	default:
+		return typed
+	}
 }
 
 func (store *Store) SaveMatches(ctx context.Context, summaries []matchdomain.Summary) (int, error) {

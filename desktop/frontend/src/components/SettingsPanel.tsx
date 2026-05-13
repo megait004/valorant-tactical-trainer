@@ -6,6 +6,7 @@ export const SettingsPanel = ({
   settings,
   onApiKeyChange,
   onClearExpiredCache,
+  onExportLocalData,
   onSaveSettings,
 }: SettingsPanelProps) => (
   <aside className="rounded-[2rem] border border-white/10 bg-tactical-900/80 p-6 shadow-2xl shadow-black/30">
@@ -47,6 +48,14 @@ export const SettingsPanel = ({
       >
         Clear expired cache
       </button>
+      <button
+        className="rounded-full border border-emerald-300/40 px-4 py-2 text-sm font-bold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
+        disabled={loading}
+        onClick={onExportLocalData}
+        type="button"
+      >
+        Export JSON
+      </button>
     </div>
 
     <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-slate-300">
@@ -60,6 +69,9 @@ export const SettingsPanel = ({
 
     <p className="mt-5 break-all rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-slate-500">
       SQLite: {settings?.dataPath || 'not loaded'}
+    </p>
+    <p className="mt-3 text-xs leading-5 text-slate-500">
+      Export excludes the saved API key value and raw provider payloads.
     </p>
   </aside>
 );

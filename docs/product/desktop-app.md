@@ -99,6 +99,7 @@ Settings screen:
 - Expired cache cleanup.
 - Local SQLite data path and local data counts.
 - Export data.
+- Export JSON excludes saved API key values and raw provider payloads.
 - Reset data.
 - Consent/data explanation.
 

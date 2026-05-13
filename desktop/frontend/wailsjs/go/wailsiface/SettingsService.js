@@ -6,6 +6,10 @@ export function ClearExpiredCache() {
   return window['go']['wailsiface']['SettingsService']['ClearExpiredCache']();
 }
 
+export function ExportLocalData() {
+  return window['go']['wailsiface']['SettingsService']['ExportLocalData']();
+}
+
 export function GetSettings() {
   return window['go']['wailsiface']['SettingsService']['GetSettings']();
 }

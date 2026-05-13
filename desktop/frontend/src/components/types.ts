@@ -44,6 +44,7 @@ export type SettingsPanelProps = {
   settings: wailsiface.SettingsDTO | null;
   onApiKeyChange: (value: string) => void;
   onClearExpiredCache: () => void;
+  onExportLocalData: () => void;
   onSaveSettings: () => void;
 };
 

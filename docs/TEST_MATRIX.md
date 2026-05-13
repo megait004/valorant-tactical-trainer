@@ -29,6 +29,7 @@ This file maps product behavior to proof.
 | US-011 | Live provider calls are throttled for Basic provider limits | rate limiter sequential and concurrent tests | provider mock tests still pass | manual not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-012 | Latest MMR/rank is fetched, cached, persisted, displayed, and reset | no | provider mock MMR test and SQLite rank snapshot/reset tests | manual not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-013 | Local settings panel manages API key presence, data stats, and expired cache cleanup | no | SQLite stats/delete setting/clear expired cache tests | manual not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
+| US-014 | Local data can be exported to privacy-aware JSON | no | SQLite export JSON test excludes API key and raw payloads | manual save dialog not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 
 ## Evidence Rules
 

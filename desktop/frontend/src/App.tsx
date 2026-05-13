@@ -4,7 +4,13 @@ import { GenerateReport } from '../wailsjs/go/wailsiface/AnalysisService';
 import { ListMatches, RefreshMatches } from '../wailsjs/go/wailsiface/MatchService';
 import { GetCurrentPlayer, LookupPlayer } from '../wailsjs/go/wailsiface/PlayerService';
 import { LatestRank, RefreshRank } from '../wailsjs/go/wailsiface/RankService';
-import { ClearExpiredCache, GetSettings, ResetAllData, SaveSettings } from '../wailsjs/go/wailsiface/SettingsService';
+import {
+  ClearExpiredCache,
+  ExportLocalData,
+  GetSettings,
+  ResetAllData,
+  SaveSettings,
+} from '../wailsjs/go/wailsiface/SettingsService';
 import type { main, wailsiface } from '../wailsjs/go/models';
 import { AppHeader } from './components/AppHeader';
 import { MatchCachePanel } from './components/MatchCachePanel';
@@ -101,6 +107,22 @@ const App = () => {
       const message = err instanceof Error ? err.message : String(err);
       setStatus(message || 'err: clear cache failed');
       console.error('err clearing cache', err);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const exportLocalData = async () => {
+    setSettingsLoading(true);
+    setStatus('exporting local data...');
+
+    try {
+      const result = await ExportLocalData();
+      setStatus(result.path ? `${result.message}: ${result.path}` : result.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: export failed');
+      console.error('err exporting data', err);
     } finally {
       setSettingsLoading(false);
     }
@@ -277,6 +299,7 @@ const App = () => {
               loading={settingsLoading}
               onApiKeyChange={setApiKey}
               onClearExpiredCache={clearExpiredCache}
+              onExportLocalData={exportLocalData}
               onSaveSettings={saveSettings}
               settings={settings}
             />

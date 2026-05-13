@@ -65,3 +65,5 @@ If provided, it is stored locally only and used by the Go API adapter.
 The frontend must not send the API key to any endpoint except through Wails-bound local Go services.
 
 Settings UI may show whether an API key is configured, but must not display the stored API key value after saving.
+
+Local data export must exclude saved API key values. Exported match/rank/report data should not include raw provider payloads unless a future explicit debug export story adds that behavior.

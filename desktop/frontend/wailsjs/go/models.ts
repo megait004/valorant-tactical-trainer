@@ -35,6 +35,20 @@ export namespace wailsiface {
 	        this.message = source["message"];
 	    }
 	}
+	export class ExportDataResult {
+	    path: string;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ExportDataResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.message = source["message"];
+	    }
+	}
 	export class FindingDTO {
 	    type: string;
 	    severity: string;
