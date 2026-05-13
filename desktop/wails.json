@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "valorant-tactical-trainer",
+  "outputfilename": "valorant-tactical-trainer",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm build",
+  "frontend:dev:watcher": "pnpm dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Nguyễn Nguyên Giáp",
+    "email": "giapfc123@gmail.com"
+  }
+}

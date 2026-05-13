@@ -1,0 +1,25 @@
+# Local reference/vendor docs downloaded outside the app project
+/react/
+/wails/
+/go-valorant-api/
+/harness-experimental/
+/tailieuapivalorant.md
+
+# Frontend dependencies/build outputs
+node_modules/
+desktop/frontend/node_modules/
+desktop/frontend/dist/
+
+# Wails build outputs
+desktop/build/bin/
+
+# Local runtime data
+*.db
+*.sqlite
+*.sqlite3
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
