@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
@@ -30,6 +31,13 @@ type Client struct {
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
+	limiter    *RateLimiter
+}
+
+type RateLimiter struct {
+	mu       sync.Mutex
+	interval time.Duration
+	next     time.Time
 }
 
 type Option func(*Client)
@@ -54,6 +62,20 @@ func WithHTTPClient(httpClient *http.Client) Option {
 	}
 }
 
+func WithRateLimiter(limiter *RateLimiter) Option {
+	return func(client *Client) {
+		client.limiter = limiter
+	}
+}
+
+func NewRateLimiter(interval time.Duration) *RateLimiter {
+	if interval <= 0 {
+		return nil
+	}
+
+	return &RateLimiter{interval: interval}
+}
+
 func NewClient(opts ...Option) *Client {
 	client := &Client{
 		baseURL: "https://api.henrikdev.xyz/valorant/v1",
@@ -67,6 +89,13 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	return client
+}
+
+var basicRateLimiter = NewRateLimiter(2 * time.Second)
+
+func NewBasicClient(opts ...Option) *Client {
+	options := append([]Option{WithRateLimiter(basicRateLimiter)}, opts...)
+	return NewClient(options...)
 }
 
 func (client *Client) LookupAccount(ctx context.Context, name string, tag string) (player.Account, error) {
@@ -83,7 +112,7 @@ func (client *Client) LookupAccount(ctx context.Context, name string, tag string
 		req.Header.Set("Authorization", client.apiKey)
 	}
 
-	resp, err := client.httpClient.Do(req)
+	resp, err := client.do(req)
 	if err != nil {
 		return player.Account{}, fmt.Errorf("%w: %v", ErrProviderUnavailable, err)
 	}
@@ -142,7 +171,7 @@ func (client *Client) MatchesByPUUID(ctx context.Context, puuid string, region s
 		req.Header.Set("Authorization", client.apiKey)
 	}
 
-	resp, err := client.httpClient.Do(req)
+	resp, err := client.do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("%w: %v", ErrProviderUnavailable, err)
 	}
@@ -217,6 +246,42 @@ func (client *Client) MatchesByPUUID(ctx context.Context, puuid string, region s
 
 func ProviderName() string {
 	return providerName
+}
+
+func (client *Client) do(req *http.Request) (*http.Response, error) {
+	if client.limiter != nil {
+		if err := client.limiter.Wait(req.Context()); err != nil {
+			return nil, err
+		}
+	}
+
+	return client.httpClient.Do(req)
+}
+
+func (limiter *RateLimiter) Wait(ctx context.Context) error {
+	limiter.mu.Lock()
+	now := time.Now()
+	wait := limiter.next.Sub(now)
+	if wait < 0 {
+		wait = 0
+	}
+	limiter.next = now.Add(wait).Add(limiter.interval)
+	limiter.mu.Unlock()
+
+	if wait == 0 {
+		return nil
+	}
+
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+	}
+
+	return nil
 }
 
 type accountResponse struct {

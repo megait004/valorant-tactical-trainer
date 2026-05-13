@@ -26,6 +26,7 @@ This file maps product behavior to proof.
 | US-008 | SQLite schema persists players, consent, matches, reports, and cache | analysis/player tests | SQLite temp DB tests for player, cache, matches, reports, reset | no | `wails build` passed | implemented | SQLite tables and tests added |
 | US-009 | Dashboard and match list render imported data | no | TypeScript compile/build | manual not run | `wails build` passed | implemented | `pnpm typecheck`, `pnpm lint`, `go test ./...`, `pnpm build`, `wails build` passed |
 | US-010 | Validation and release build flow is documented and runnable | analysis/player tests | mock provider and SQLite temp DB tests | manual not run | `wails build` passed | implemented | `desktop/VALIDATION.md`, `pnpm validate`, `go test ./...`, `wails build` passed |
+| US-011 | Live provider calls are throttled for Basic provider limits | rate limiter sequential and concurrent tests | provider mock tests still pass | manual not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 
 ## Evidence Rules
 

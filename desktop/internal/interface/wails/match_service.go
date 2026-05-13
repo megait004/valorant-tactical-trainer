@@ -79,7 +79,7 @@ func (service *MatchService) RefreshMatches(input RefreshMatchesInput) (RefreshM
 		}, nil
 	}
 
-	client := valorantapi.NewClient(valorantapi.WithAPIKey(apiKey))
+	client := valorantapi.NewBasicClient(valorantapi.WithAPIKey(apiKey))
 	summaries, rawPayload, err := client.MatchesByPUUID(ctx, input.PUUID, input.Region, input.Size)
 	if err != nil {
 		return RefreshMatchesResult{}, mapProviderError(err)

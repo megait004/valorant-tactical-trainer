@@ -21,6 +21,8 @@ Provider docs describe:
 
 The app must assume the lower Basic limit unless settings indicate otherwise.
 
+The default desktop provider client spaces live calls by 2 seconds, matching the Basic 30 requests per minute limit. Tests can use an unthrottled client or a shorter injected limiter.
+
 ## Adapter Boundary
 
 Provider responses enter the app only through `internal/infrastructure/valorantapi`.

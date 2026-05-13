@@ -79,7 +79,7 @@ func (service *PlayerService) LookupPlayer(input LookupPlayerInput) (LookupPlaye
 		}
 	}
 
-	client := valorantapi.NewClient(valorantapi.WithAPIKey(input.APIKey))
+	client := valorantapi.NewBasicClient(valorantapi.WithAPIKey(input.APIKey))
 	account, err := client.LookupAccount(ctx, name, tag)
 	if err != nil {
 		return LookupPlayerResult{}, mapProviderError(err)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestLookupAccount(t *testing.T) {
@@ -108,5 +109,71 @@ func TestMatchesByPUUID(t *testing.T) {
 	match := matches[0]
 	if match.MatchID != "m1" || match.MapName != "Ascent" || match.Agent != "Sova" || match.Kills != 20 {
 		t.Fatalf("unexpected match: %+v", match)
+	}
+}
+
+func TestRateLimiterWaitsBetweenRequests(t *testing.T) {
+	t.Parallel()
+
+	limiter := NewRateLimiter(20 * time.Millisecond)
+	client := NewClient(WithRateLimiter(limiter))
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		requests++
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{
+			"status": 200,
+			"data": {
+				"puuid": "p1",
+				"region": "ap",
+				"account_level": 123,
+				"name": "Player",
+				"tag": "VN2",
+				"card": {"small": "small.png", "large": "large.png"},
+				"last_update": "today"
+			}
+		}`))
+	}))
+	defer server.Close()
+
+	client.baseURL = server.URL
+	started := time.Now()
+	if _, err := client.LookupAccount(context.Background(), "Player", "VN2"); err != nil {
+		t.Fatalf("first lookup: %v", err)
+	}
+	if _, err := client.LookupAccount(context.Background(), "Player", "VN2"); err != nil {
+		t.Fatalf("second lookup: %v", err)
+	}
+
+	if requests != 2 {
+		t.Fatalf("expected 2 requests, got %d", requests)
+	}
+	if elapsed := time.Since(started); elapsed < 20*time.Millisecond {
+		t.Fatalf("expected throttle delay, got %s", elapsed)
+	}
+}
+
+func TestRateLimiterReservesConcurrentSlots(t *testing.T) {
+	t.Parallel()
+
+	limiter := NewRateLimiter(10 * time.Millisecond)
+	ctx := context.Background()
+	started := time.Now()
+	done := make(chan error, 3)
+
+	for range 3 {
+		go func() {
+			done <- limiter.Wait(ctx)
+		}()
+	}
+
+	for range 3 {
+		if err := <-done; err != nil {
+			t.Fatalf("wait: %v", err)
+		}
+	}
+
+	if elapsed := time.Since(started); elapsed < 20*time.Millisecond {
+		t.Fatalf("expected reserved slots, got %s", elapsed)
 	}
 }
