@@ -48,6 +48,24 @@ export type SettingsPanelProps = {
   onSaveSettings: () => void;
 };
 
+export type VirtualAssistantPanelProps = {
+  agent: string;
+  assistantLoading: boolean;
+  credits: number;
+  mapName: string;
+  phase: string;
+  previousOutcome: string;
+  result: wailsiface.AssistantResultDTO | null;
+  side: string;
+  onAgentChange: (value: string) => void;
+  onCreditsChange: (value: number) => void;
+  onMapNameChange: (value: string) => void;
+  onPhaseChange: (value: string) => void;
+  onPreviousOutcomeChange: (value: string) => void;
+  onQueryAssistant: () => void;
+  onSideChange: (value: string) => void;
+};
+
 export type ReportPanelProps = {
   report: wailsiface.ReportDTO;
 };

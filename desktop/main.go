@@ -28,6 +28,7 @@ func main() {
 	matchService := wailsiface.NewMatchService(store)
 	rankService := wailsiface.NewRankService(store)
 	analysisService := wailsiface.NewAnalysisService(store)
+	assistantService := wailsiface.NewAssistantService(store)
 	settingsService := wailsiface.NewSettingsService(store)
 
 	// Create application with options
@@ -49,6 +50,7 @@ func main() {
 			matchService,
 			rankService,
 			analysisService,
+			assistantService,
 			settingsService,
 		},
 	})

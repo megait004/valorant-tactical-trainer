@@ -21,6 +21,114 @@ export namespace main {
 
 export namespace wailsiface {
 	
+	export class AssistantQueryInput {
+	    mapName: string;
+	    agent: string;
+	    side: string;
+	    phase: string;
+	    credits: number;
+	    previousOutcome: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AssistantQueryInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mapName = source["mapName"];
+	        this.agent = source["agent"];
+	        this.side = source["side"];
+	        this.phase = source["phase"];
+	        this.credits = source["credits"];
+	        this.previousOutcome = source["previousOutcome"];
+	    }
+	}
+	export class EconomyAdviceDTO {
+	    plan: string;
+	    summary: string;
+	    buyThreshold: number;
+	    nextRoundMin: number;
+	    reminder: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EconomyAdviceDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.plan = source["plan"];
+	        this.summary = source["summary"];
+	        this.buyThreshold = source["buyThreshold"];
+	        this.nextRoundMin = source["nextRoundMin"];
+	        this.reminder = source["reminder"];
+	    }
+	}
+	export class TacticalCardDTO {
+	    id: string;
+	    mapName: string;
+	    agent: string;
+	    side: string;
+	    phase: string;
+	    category: string;
+	    title: string;
+	    summary: string;
+	    action: string;
+	    priority: number;
+	    safetyNotes: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new TacticalCardDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.mapName = source["mapName"];
+	        this.agent = source["agent"];
+	        this.side = source["side"];
+	        this.phase = source["phase"];
+	        this.category = source["category"];
+	        this.title = source["title"];
+	        this.summary = source["summary"];
+	        this.action = source["action"];
+	        this.priority = source["priority"];
+	        this.safetyNotes = source["safetyNotes"];
+	    }
+	}
+	export class AssistantResultDTO {
+	    cards: TacticalCardDTO[];
+	    economyAdvice: EconomyAdviceDTO;
+	    safetyNotes: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new AssistantResultDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cards = this.convertValues(source["cards"], TacticalCardDTO);
+	        this.economyAdvice = this.convertValues(source["economyAdvice"], EconomyAdviceDTO);
+	        this.safetyNotes = source["safetyNotes"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class ClearCacheResult {
 	    cleared: number;
 	    message: string;
@@ -35,6 +143,7 @@ export namespace wailsiface {
 	        this.message = source["message"];
 	    }
 	}
+	
 	export class ExportDataResult {
 	    path: string;
 	    message: string;

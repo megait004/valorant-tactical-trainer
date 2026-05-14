@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppInfo } from '../wailsjs/go/main/App';
 import { GenerateReport } from '../wailsjs/go/wailsiface/AnalysisService';
+import { QueryAssistant } from '../wailsjs/go/wailsiface/AssistantService';
 import { ListMatches, RefreshMatches } from '../wailsjs/go/wailsiface/MatchService';
 import { GetCurrentPlayer, LookupPlayer } from '../wailsjs/go/wailsiface/PlayerService';
 import { LatestRank, RefreshRank } from '../wailsjs/go/wailsiface/RankService';
@@ -16,6 +17,7 @@ import { AppHeader } from './components/AppHeader';
 import { MatchCachePanel } from './components/MatchCachePanel';
 import { SetupPanel } from './components/SetupPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { VirtualAssistantPanel } from './components/VirtualAssistantPanel';
 
 const App = () => {
   const [appInfo, setAppInfo] = useState<main.AppInfo | null>(null);
@@ -25,10 +27,17 @@ const App = () => {
   const [rank, setRank] = useState<wailsiface.RankDTO | null>(null);
   const [report, setReport] = useState<wailsiface.ReportDTO | null>(null);
   const [settings, setSettings] = useState<wailsiface.SettingsDTO | null>(null);
+  const [assistantResult, setAssistantResult] = useState<wailsiface.AssistantResultDTO | null>(null);
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [region, setRegion] = useState('ap');
   const [apiKey, setApiKey] = useState('');
+  const [assistantMap, setAssistantMap] = useState('Ascent');
+  const [assistantAgent, setAssistantAgent] = useState('');
+  const [assistantSide, setAssistantSide] = useState('attack');
+  const [assistantPhase, setAssistantPhase] = useState('prematch');
+  const [assistantCredits, setAssistantCredits] = useState(3900);
+  const [assistantOutcome, setAssistantOutcome] = useState('win');
   const [consent, setConsent] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [matchLoading, setMatchLoading] = useState(false);
@@ -36,6 +45,7 @@ const App = () => {
   const [reportLoading, setReportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
+  const [assistantLoading, setAssistantLoading] = useState(false);
   const [status, setStatus] = useState('Go core waiting for binding smoke');
 
   useEffect(() => {
@@ -257,6 +267,30 @@ const App = () => {
     }
   };
 
+  const queryAssistant = async () => {
+    setAssistantLoading(true);
+    setStatus('loading tactical assistant...');
+
+    try {
+      const result = await QueryAssistant({
+        agent: assistantAgent,
+        credits: assistantCredits,
+        mapName: assistantMap,
+        phase: assistantPhase,
+        previousOutcome: assistantOutcome,
+        side: assistantSide,
+      });
+      setAssistantResult(result);
+      setStatus(`assistant ready: ${result.cards.length} cards, ${result.economyAdvice.plan}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: assistant failed');
+      console.error('err querying assistant', err);
+    } finally {
+      setAssistantLoading(false);
+    }
+  };
+
   const canLookup = consent && name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
 
   return (
@@ -294,6 +328,23 @@ const App = () => {
             tag={tag}
           />
           <div className="space-y-6">
+            <VirtualAssistantPanel
+              agent={assistantAgent}
+              assistantLoading={assistantLoading}
+              credits={assistantCredits}
+              mapName={assistantMap}
+              onAgentChange={setAssistantAgent}
+              onCreditsChange={setAssistantCredits}
+              onMapNameChange={setAssistantMap}
+              onPhaseChange={setAssistantPhase}
+              onPreviousOutcomeChange={setAssistantOutcome}
+              onQueryAssistant={queryAssistant}
+              onSideChange={setAssistantSide}
+              phase={assistantPhase}
+              previousOutcome={assistantOutcome}
+              result={assistantResult}
+              side={assistantSide}
+            />
             <SettingsPanel
               apiKey={apiKey}
               loading={settingsLoading}

@@ -146,3 +146,23 @@ Economy issue:
 If high-spend rounds are lost frequently:
   create buy-round trading/spacing recommendation
 ```
+
+## Virtual Tactical Assistant MVP
+
+The assistant provides tactical lookup cards rather than live game automation. Users choose map, agent, side, and phase manually. The app combines local cards with simple economy rules to suggest safe actions.
+
+Supported MVP card categories:
+
+- `composition`
+- `default-strat`
+- `crosshair`
+- `lineup`
+
+Economy rules:
+
+- credits below 2000 -> Eco.
+- credits below 3900 after a loss -> Light / Half Buy.
+- credits at or above 3900 -> Full Buy.
+- otherwise -> Force Buy only if the whole team commits.
+
+The assistant must not depend on memory reading, process injection, or hidden match-state detection.

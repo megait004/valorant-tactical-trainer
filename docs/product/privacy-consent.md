@@ -67,3 +67,5 @@ The frontend must not send the API key to any endpoint except through Wails-boun
 Settings UI may show whether an API key is configured, but must not display the stored API key value after saving.
 
 Local data export must exclude saved API key values. Exported match/rank/report data should not include raw provider payloads unless a future explicit debug export story adds that behavior.
+
+Virtual Tactical Assistant MVP must remain local/manual. It must not read VALORANT process memory, inject into the game, automate input, or infer hidden live match state without an explicit safe API and user opt-in.

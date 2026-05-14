@@ -32,3 +32,4 @@ This backlog tracks the initial Valorant Tactical Trainer buildout. Create detai
 | US-012 | E03 | Fetch and display current rank | high-risk | implemented |
 | US-013 | E02 | Add local settings panel | high-risk | implemented |
 | US-014 | E04 | Export local data | high-risk | implemented |
+| US-015 | E05 | Virtual tactical assistant MVP | high-risk | implemented |

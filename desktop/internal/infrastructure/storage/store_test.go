@@ -8,6 +8,7 @@ import (
 	"time"
 
 	analysisdomain "valorant-tactical-trainer/internal/domain/analysis"
+	assistantdomain "valorant-tactical-trainer/internal/domain/assistant"
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
 	"valorant-tactical-trainer/internal/domain/player"
 	"valorant-tactical-trainer/internal/domain/rank"
@@ -168,6 +169,33 @@ func TestExportJSONExcludesAPIKeyValue(t *testing.T) {
 	}
 	if !snapshot.APIKeyConfigured || len(snapshot.Players) != 1 || len(snapshot.Matches) != 1 {
 		t.Fatalf("unexpected export snapshot: %+v", snapshot)
+	}
+}
+
+func TestTacticalCardsSeedAndQuery(t *testing.T) {
+	t.Parallel()
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	cards, err := store.TacticalCards(ctx, assistantdomain.Query{MapName: "Ascent", Agent: "Sova", Side: "Attack", Phase: "InGame"})
+	if err != nil {
+		t.Fatalf("query tactical cards: %v", err)
+	}
+	if len(cards) == 0 {
+		t.Fatal("expected tactical cards")
+	}
+	if cards[0].Priority < cards[len(cards)-1].Priority {
+		t.Fatalf("expected priority order: %+v", cards)
+	}
+
+	foundLineup := false
+	for _, card := range cards {
+		if card.Category == "lineup" && card.Agent == "sova" {
+			foundLineup = true
+		}
+	}
+	if !foundLineup {
+		t.Fatalf("expected Sova lineup card: %+v", cards)
 	}
 }
 

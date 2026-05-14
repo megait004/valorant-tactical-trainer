@@ -62,6 +62,14 @@ Dashboard screen:
 - Latest recommendations.
 - Rate-limit status.
 
+Virtual Tactical Assistant screen:
+
+- Manual map, agent, side, phase, credits, and previous-round inputs.
+- Pre-match composition and mindset cards.
+- In-game lookup cards for default strats, lineups, and crosshair-placement notes.
+- Economy manager advice for Eco, Light/Half Buy, Force Buy, and Full Buy.
+- Explicit safety copy: no memory reading, no injection, no automatic game-state detection.
+
 Match list screen:
 
 - Imported matches.
@@ -112,6 +120,7 @@ Initial services:
 - `AnalysisService`
 - `SettingsService`
 - `RankService`
+- `AssistantService`
 
 Service methods should return UI-safe DTOs and errors that can be shown naturally.
 
@@ -120,6 +129,7 @@ Service methods should return UI-safe DTOs and errors that can be shown naturall
 - Use native confirmation dialog before destructive reset.
 - Use local file dialogs for export/import when implemented.
 - Build must pass `wails build` before release/demo.
+- Overlay/always-on-top assistant mode requires a separate story and must include a visible quick-close control.
 
 ## UI Direction
 

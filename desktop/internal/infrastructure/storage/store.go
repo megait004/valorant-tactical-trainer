@@ -11,6 +11,7 @@ import (
 	"time"
 
 	analysisdomain "valorant-tactical-trainer/internal/domain/analysis"
+	assistantdomain "valorant-tactical-trainer/internal/domain/assistant"
 	matchdomain "valorant-tactical-trainer/internal/domain/match"
 	"valorant-tactical-trainer/internal/domain/player"
 	"valorant-tactical-trainer/internal/domain/rank"
@@ -35,6 +36,7 @@ type ExportSnapshot struct {
 	AnalysisReports  []map[string]any `json:"analysisReports"`
 	AnalysisFindings []map[string]any `json:"analysisFindings"`
 	Recommendations  []map[string]any `json:"recommendations"`
+	TacticalCards    []map[string]any `json:"tacticalCards"`
 }
 
 func Open(ctx context.Context) (*Store, error) {
@@ -288,6 +290,9 @@ func (store *Store) ExportSnapshot(ctx context.Context) (ExportSnapshot, error) 
 	if snapshot.Recommendations, err = store.exportRows(ctx, `select id, report_id, title, drill, priority, reason, evidence, status, created_at, updated_at from training_recommendations order by id asc`); err != nil {
 		return ExportSnapshot{}, err
 	}
+	if snapshot.TacticalCards, err = store.exportRows(ctx, `select id, map_name, agent, side, phase, category, title, summary, action, priority, safety_notes, created_at, updated_at from tactical_cards order by map_name, priority desc, title asc`); err != nil {
+		return ExportSnapshot{}, err
+	}
 
 	return snapshot, nil
 }
@@ -407,6 +412,75 @@ func (store *Store) SaveMatches(ctx context.Context, summaries []matchdomain.Sum
 	}
 
 	return inserted, nil
+}
+
+func (store *Store) SeedTacticalCards(ctx context.Context) error {
+	now := time.Now().UTC()
+	for _, card := range assistantdomain.SeedCards() {
+		_, err := store.db.ExecContext(ctx, `
+			insert into tactical_cards (id, map_name, agent, side, phase, category, title, summary, action, priority, safety_notes, created_at, updated_at)
+			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			on conflict(id) do update set
+				map_name = excluded.map_name,
+				agent = excluded.agent,
+				side = excluded.side,
+				phase = excluded.phase,
+				category = excluded.category,
+				title = excluded.title,
+				summary = excluded.summary,
+				action = excluded.action,
+				priority = excluded.priority,
+				safety_notes = excluded.safety_notes,
+				updated_at = excluded.updated_at
+		`, card.ID, card.MapName, card.Agent, card.Side, card.Phase, card.Category, card.Title, card.Summary, card.Action, card.Priority, card.SafetyNotes, now, now)
+		if err != nil {
+			return fmt.Errorf("seed tactical cards: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (store *Store) TacticalCards(ctx context.Context, query assistantdomain.Query) ([]assistantdomain.TacticalCard, error) {
+	mapName := assistantdomain.NormalizeText(query.MapName)
+	agent := assistantdomain.NormalizeText(query.Agent)
+	side := assistantdomain.NormalizeText(query.Side)
+	phase := assistantdomain.NormalizeText(query.Phase)
+	if side == "" {
+		side = "both"
+	}
+	if phase == "" {
+		phase = "ingame"
+	}
+
+	rows, err := store.db.QueryContext(ctx, `
+		select id, map_name, agent, side, phase, category, title, summary, action, priority, safety_notes
+		from tactical_cards
+		where (map_name = ? or map_name = '')
+			and (agent = ? or agent = '')
+			and (side = ? or side = 'both')
+			and (phase = ? or phase = 'any')
+		order by priority desc, title asc
+		limit 8
+	`, mapName, agent, side, phase)
+	if err != nil {
+		return nil, fmt.Errorf("query tactical cards: %w", err)
+	}
+	defer rows.Close()
+
+	cards := []assistantdomain.TacticalCard{}
+	for rows.Next() {
+		var card assistantdomain.TacticalCard
+		if err := rows.Scan(&card.ID, &card.MapName, &card.Agent, &card.Side, &card.Phase, &card.Category, &card.Title, &card.Summary, &card.Action, &card.Priority, &card.SafetyNotes); err != nil {
+			return nil, fmt.Errorf("scan tactical card: %w", err)
+		}
+		cards = append(cards, card)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate tactical cards: %w", err)
+	}
+
+	return cards, nil
 }
 
 func (store *Store) SaveRankSnapshot(ctx context.Context, snapshot rank.Snapshot) error {
@@ -666,6 +740,21 @@ func (store *Store) migrate(ctx context.Context) error {
 			updated_at datetime not null,
 			foreign key(report_id) references analysis_reports(id)
 		)`,
+		`create table if not exists tactical_cards (
+			id text primary key,
+			map_name text not null default '',
+			agent text not null default '',
+			side text not null default 'both',
+			phase text not null default 'any',
+			category text not null,
+			title text not null,
+			summary text not null,
+			action text not null,
+			priority integer not null default 0,
+			safety_notes text not null default '',
+			created_at datetime not null,
+			updated_at datetime not null
+		)`,
 	}
 
 	for _, statement := range statements {
@@ -674,7 +763,7 @@ func (store *Store) migrate(ctx context.Context) error {
 		}
 	}
 
-	return nil
+	return store.SeedTacticalCards(ctx)
 }
 
 func joinEvidence(values []string) string {
