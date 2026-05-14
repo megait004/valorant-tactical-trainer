@@ -32,6 +32,7 @@ This file maps product behavior to proof.
 | US-014 | Local data can be exported to privacy-aware JSON | no | SQLite export JSON test excludes API key and raw payloads | manual save dialog not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-015 | Virtual Tactical Assistant provides safe local tactical cards and economy advice | economy tests and seed-card completeness tests | SQLite tactical card query test | manual UI smoke not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-016 | Core UI supports English/Vietnamese and docs explain usage/code structure | existing tests | Wails bindings compile for `SaveLanguage` | manual language smoke not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
+| US-017 | Cached matches can be searched, filtered, selected, and inspected inline | no | TypeScript compile/build | manual UI smoke not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 
 ## Evidence Rules
 

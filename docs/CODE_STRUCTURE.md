@@ -279,6 +279,7 @@ Ngôn ngữ được lưu vào SQLite qua `SaveLanguage` và load lại qua `Get
 - `VirtualAssistantPanel`: VTA input + tactical cards + economy advice.
 - `SettingsPanel`: API key, cache cleanup, export, stats.
 - `MatchCachePanel`: danh sách match đã lưu.
+- `MatchCachePanel`: search/filter match cache và xem inline selected match detail.
 - `ReportPanel`: findings và training recommendations.
 - `types.ts`: props types dùng chung.
 

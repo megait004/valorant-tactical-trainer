@@ -116,6 +116,7 @@ wails build
 - App fetch match history qua Go backend.
 - Dữ liệu match được dedupe và lưu trong bảng `matches`.
 - Match cache hiển thị ở panel bên phải.
+- Có thể search theo map/agent/mode/region, lọc theo map, và click từng match để xem chi tiết K/D/A, rounds, headshots, damage.
 
 ### 5. Refresh Rank/MMR
 
