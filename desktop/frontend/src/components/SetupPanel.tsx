@@ -42,7 +42,7 @@ export const SetupPanel = ({
         <input
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
           onChange={(event) => onNameChange(event.target.value)}
-          placeholder="ten nguoi choi"
+          placeholder={t.playerNamePlaceholder}
           type="text"
           value={name}
         />
@@ -77,7 +77,7 @@ export const SetupPanel = ({
         <input
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
           onChange={(event) => onApiKeyChange(event.target.value)}
-          placeholder="de trong neu chua co key"
+          placeholder={t.apiKeySetupPlaceholder}
           type="password"
           value={apiKey}
         />
@@ -116,7 +116,7 @@ export const SetupPanel = ({
         onClick={onRefreshMatches}
         type="button"
       >
-        {matchLoading ? 'Refreshing...' : t.refreshMatches}
+        {matchLoading ? t.refreshing : t.refreshMatches}
       </button>
       <button
         className="rounded-full border border-emerald-300/40 px-5 py-3 text-sm font-bold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -124,7 +124,7 @@ export const SetupPanel = ({
         onClick={onRefreshRank}
         type="button"
       >
-        {rankLoading ? 'Refreshing rank...' : t.refreshRank}
+        {rankLoading ? t.refreshingRank : t.refreshRank}
       </button>
       <button
         className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -132,7 +132,7 @@ export const SetupPanel = ({
         onClick={onGenerateReport}
         type="button"
       >
-        {reportLoading ? 'Analyzing...' : t.generateReport}
+        {reportLoading ? t.analyzing : t.generateReport}
       </button>
       <button
         className="rounded-full border border-red-400/40 px-5 py-3 text-sm font-bold text-red-200 transition hover:-translate-y-0.5 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -140,7 +140,7 @@ export const SetupPanel = ({
         onClick={onResetAllData}
         type="button"
       >
-        {resetLoading ? 'Resetting...' : t.resetLocalData}
+        {resetLoading ? t.resetting : t.resetLocalData}
       </button>
     </div>
 
@@ -153,7 +153,8 @@ export const SetupPanel = ({
               {currentPlayer.name}#{currentPlayer.tag}
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              Region {currentPlayer.region || region.toUpperCase()} · Level {currentPlayer.accountLevel || 'unknown'}
+              {t.region} {currentPlayer.region || region.toUpperCase()} · {t.level}{' '}
+              {currentPlayer.accountLevel || t.unknown}
             </p>
             <p className="mt-2 break-all text-xs text-slate-500">PUUID: {currentPlayer.puuid}</p>
           </div>
@@ -161,19 +162,20 @@ export const SetupPanel = ({
         {rank && (
           <div className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 p-5">
             <p className="text-sm font-semibold text-emerald-200">{t.latestRank}</p>
-            <h3 className="mt-2 text-2xl font-bold text-white">{rank.tierName || 'Unrated / unknown'}</h3>
+            <h3 className="mt-2 text-2xl font-bold text-white">{rank.tierName || t.unratedUnknown}</h3>
             <p className="mt-2 text-sm text-slate-300">
-              {rank.rankingInTier} RR · elo {rank.elo || 'unknown'} · last game {rank.mmrChangeToLast > 0 ? '+' : ''}
+              {rank.rankingInTier} RR · elo {rank.elo || t.unknown} · {t.lastGame}{' '}
+              {rank.mmrChangeToLast > 0 ? '+' : ''}
               {rank.mmrChangeToLast}
             </p>
             <p className="mt-2 text-xs text-slate-500">
-              Region {rank.region || region.toUpperCase()} · fetched {rank.fetchedAt || 'unknown'}
+              {t.region} {rank.region || region.toUpperCase()} · {t.fetched} {rank.fetchedAt || t.unknown}
             </p>
           </div>
         )}
         {lookupResult && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-slate-300">
-            Provider: {lookupResult.provider} · Consent version: {lookupResult.consentVersion}
+            {t.provider}: {lookupResult.provider} · {t.consentVersion}: {lookupResult.consentVersion}
           </div>
         )}
         {appInfo && (

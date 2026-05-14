@@ -26,7 +26,7 @@ export const SettingsPanel = ({
       <input
         className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
         onChange={(event) => onApiKeyChange(event.target.value)}
-        placeholder={settings?.apiKeyConfigured ? 'leave empty and save to clear key' : 'optional Henrik API key'}
+        placeholder={settings?.apiKeyConfigured ? t.clearKeyPlaceholder : t.optionalApiKeyPlaceholder}
         type="password"
         value={apiKey}
       />
@@ -39,7 +39,7 @@ export const SettingsPanel = ({
         onClick={onSaveSettings}
         type="button"
       >
-        {loading ? 'Saving...' : t.saveKey}
+        {loading ? t.saving : t.saveKey}
       </button>
       <button
         className="rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -60,16 +60,16 @@ export const SettingsPanel = ({
     </div>
 
     <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-slate-300">
-      <Stat label="players" value={settings?.players ?? 0} />
-      <Stat label="matches" value={settings?.matches ?? 0} />
-      <Stat label="rank snaps" value={settings?.rankSnapshots ?? 0} />
-      <Stat label="reports" value={settings?.reports ?? 0} />
-      <Stat label="cache" value={settings?.cacheEntries ?? 0} />
-      <Stat label="expired" value={settings?.expiredCacheEntries ?? 0} />
+      <Stat label={t.players} value={settings?.players ?? 0} />
+      <Stat label={t.matches} value={settings?.matches ?? 0} />
+      <Stat label={t.rankSnaps} value={settings?.rankSnapshots ?? 0} />
+      <Stat label={t.reports} value={settings?.reports ?? 0} />
+      <Stat label={t.cache} value={settings?.cacheEntries ?? 0} />
+      <Stat label={t.expired} value={settings?.expiredCacheEntries ?? 0} />
     </div>
 
     <p className="mt-5 break-all rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-slate-500">
-      SQLite: {settings?.dataPath || 'not loaded'}
+      SQLite: {settings?.dataPath || t.notLoaded}
     </p>
     <p className="mt-3 text-xs leading-5 text-slate-500">
       {t.exportNote}

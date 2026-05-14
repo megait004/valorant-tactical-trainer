@@ -51,7 +51,8 @@ const App = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [assistantLoading, setAssistantLoading] = useState(false);
-  const [status, setStatus] = useState('Go core waiting for binding smoke');
+  const t = translations[language];
+  const [status, setStatus] = useState<string>(translations.en.coreWaiting);
 
   useEffect(() => {
     const loadCurrentPlayer = async () => {
@@ -62,14 +63,14 @@ const App = () => {
         const player = await GetCurrentPlayer();
         if (player) {
           setCurrentPlayer(player);
-          setStatus(`current player: ${player.name}#${player.tag}`);
+          setStatus(`${translations[getLanguage(savedSettings.language)].currentPlayer}: ${player.name}#${player.tag}`);
           const savedMatches = await ListMatches(player.puuid);
           setMatches(savedMatches);
           const savedRank = await LatestRank(player.puuid);
           setRank(savedRank);
         }
       } catch (err) {
-        setStatus('err: current player unavailable');
+        setStatus(t.currentPlayerUnavailable);
         console.error('err loading current player', err);
       }
     };
@@ -78,32 +79,32 @@ const App = () => {
   }, []);
 
   const checkCore = async () => {
-    setStatus('checking Go core...');
+    setStatus(t.checkingCore);
 
     try {
       const info = await AppInfo();
       setAppInfo(info);
-      setStatus('data received');
+      setStatus(t.dataReceived);
     } catch (err) {
-      setStatus('err: Go binding unavailable');
+      setStatus(t.goBindingUnavailable);
       console.error('err checking core', err);
     }
   };
 
   const saveSettings = async () => {
     setSettingsLoading(true);
-    setStatus('saving settings...');
+    setStatus(t.savingSettings);
 
     try {
       const result = await SaveSettings({ apiKey });
       setSettings(result);
-      setStatus(result.message);
+      setStatus(t.settingsSaved);
       if (apiKey.trim() === '') {
         setApiKey('');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: save settings failed');
+      setStatus(message || t.saveSettingsFailed);
       console.error('err saving settings', err);
     } finally {
       setSettingsLoading(false);
@@ -112,32 +113,32 @@ const App = () => {
 
   const changeLanguage = async (nextLanguage: Language) => {
     setLanguage(nextLanguage);
-    setStatus(nextLanguage === 'vi' ? 'đang lưu ngôn ngữ...' : 'saving language...');
+    setStatus(translations[nextLanguage].savingLanguage);
 
     try {
       const result = await SaveLanguage({ language: nextLanguage });
       setSettings(result);
       setLanguage(getLanguage(result.language));
-      setStatus(nextLanguage === 'vi' ? 'đã lưu ngôn ngữ' : 'language saved');
+      setStatus(translations[nextLanguage].languageSaved);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: save language failed');
+      setStatus(message || translations[nextLanguage].saveLanguageFailed);
       console.error('err saving language', err);
     }
   };
 
   const clearExpiredCache = async () => {
     setSettingsLoading(true);
-    setStatus('clearing expired cache...');
+    setStatus(t.clearingExpiredCache);
 
     try {
       const result = await ClearExpiredCache();
       const refreshed = await GetSettings();
       setSettings(refreshed);
-      setStatus(`${result.message}: ${result.cleared} removed`);
+      setStatus(`${t.clearExpiredCache}: ${result.cleared} ${t.removed}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: clear cache failed');
+      setStatus(message || t.clearCacheFailed);
       console.error('err clearing cache', err);
     } finally {
       setSettingsLoading(false);
@@ -146,14 +147,14 @@ const App = () => {
 
   const exportLocalData = async () => {
     setSettingsLoading(true);
-    setStatus('exporting local data...');
+    setStatus(t.exportingLocalData);
 
     try {
       const result = await ExportLocalData();
-      setStatus(result.path ? `${result.message}: ${result.path}` : result.message);
+      setStatus(result.path ? `${t.exportJson}: ${result.path}` : t.resetCancelled);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: export failed');
+      setStatus(message || t.exportFailed);
       console.error('err exporting data', err);
     } finally {
       setSettingsLoading(false);
@@ -163,7 +164,7 @@ const App = () => {
   const lookupPlayer = async () => {
     setLookupLoading(true);
     setLookupResult(null);
-    setStatus('checking consent and provider...');
+    setStatus(t.checkingConsentProvider);
 
     try {
       const result = await LookupPlayer({ name, tag, region, consent, apiKey });
@@ -173,10 +174,10 @@ const App = () => {
       setMatches(savedMatches);
       const savedRank = await LatestRank(result.player.puuid);
       setRank(savedRank);
-      setStatus(result.message || 'data received');
+      setStatus(result.message || t.dataReceived);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: lookup failed');
+      setStatus(message || t.lookupFailed);
       console.error('err lookup player', err);
     } finally {
       setLookupLoading(false);
@@ -185,12 +186,12 @@ const App = () => {
 
   const refreshMatches = async () => {
     if (!currentPlayer) {
-      setStatus('err: lookup player first');
+      setStatus(t.lookupFirst);
       return;
     }
 
     setMatchLoading(true);
-    setStatus('refreshing matches...');
+    setStatus(t.refreshingMatchesStatus);
 
     try {
       const result = await RefreshMatches({
@@ -200,10 +201,10 @@ const App = () => {
         apiKey,
       });
       setMatches(result.matches);
-      setStatus(`${result.message}: ${result.matches.length} total, ${result.imported} touched`);
+      setStatus(`${t.refreshMatches}: ${result.matches.length} ${t.matches}, ${result.imported} ${t.stored}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: refresh matches failed');
+      setStatus(message || t.refreshMatchesFailed);
       console.error('err refresh matches', err);
     } finally {
       setMatchLoading(false);
@@ -212,20 +213,20 @@ const App = () => {
 
   const generateReport = async () => {
     if (!currentPlayer) {
-      setStatus('err: lookup player first');
+      setStatus(t.lookupFirst);
       return;
     }
 
     setReportLoading(true);
-    setStatus('generating tactical report...');
+    setStatus(t.generatingReport);
 
     try {
       const nextReport = await GenerateReport(currentPlayer.puuid);
       setReport(nextReport);
-      setStatus(`report generated: ${nextReport.findings.length} findings`);
+      setStatus(`${t.reportGenerated}: ${nextReport.findings.length} ${t.findings}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: report failed');
+      setStatus(message || t.reportFailed);
       console.error('err generating report', err);
     } finally {
       setReportLoading(false);
@@ -234,12 +235,12 @@ const App = () => {
 
   const refreshRank = async () => {
     if (!currentPlayer) {
-      setStatus('err: lookup player first');
+      setStatus(t.lookupFirst);
       return;
     }
 
     setRankLoading(true);
-    setStatus('refreshing rank...');
+    setStatus(t.refreshingRankStatus);
 
     try {
       const result = await RefreshRank({
@@ -248,10 +249,10 @@ const App = () => {
         apiKey,
       });
       setRank(result.rank);
-      setStatus(`${result.message}: ${result.rank.tierName || 'rank unknown'}`);
+      setStatus(`${t.refreshRank}: ${result.rank.tierName || t.rankUnknown}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: refresh rank failed');
+      setStatus(message || t.refreshRankFailed);
       console.error('err refresh rank', err);
     } finally {
       setRankLoading(false);
@@ -260,12 +261,12 @@ const App = () => {
 
   const resetAllData = async () => {
     setResetLoading(true);
-    setStatus('resetting local data...');
+    setStatus(t.resettingLocalData);
 
     try {
       const result = await ResetAllData();
       if (result.message === 'reset cancelled') {
-        setStatus(result.message);
+        setStatus(t.resetCancelled);
         return;
       }
       setCurrentPlayer(null);
@@ -279,10 +280,10 @@ const App = () => {
       setConsent(false);
       const refreshed = await GetSettings();
       setSettings(refreshed);
-      setStatus(result.message);
+      setStatus(t.resetLocalData);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: reset failed');
+      setStatus(message || t.resetFailed);
       console.error('err resetting data', err);
     } finally {
       setResetLoading(false);
@@ -291,7 +292,7 @@ const App = () => {
 
   const queryAssistant = async () => {
     setAssistantLoading(true);
-    setStatus('loading tactical assistant...');
+    setStatus(t.assistantLoading);
 
     try {
       const result = await QueryAssistant({
@@ -303,10 +304,10 @@ const App = () => {
         side: assistantSide,
       });
       setAssistantResult(result);
-      setStatus(`assistant ready: ${result.cards.length} cards, ${result.economyAdvice.plan}`);
+      setStatus(`${t.assistantReady}: ${result.cards.length} cards, ${result.economyAdvice.plan}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: assistant failed');
+      setStatus(message || t.assistantFailed);
       console.error('err querying assistant', err);
     } finally {
       setAssistantLoading(false);
@@ -315,22 +316,20 @@ const App = () => {
 
   const toggleOverlay = async () => {
     const nextOverlay = !overlayEnabled;
-    setStatus(nextOverlay ? 'enabling assistant overlay...' : 'disabling assistant overlay...');
+    setStatus(nextOverlay ? t.enablingOverlay : t.disablingOverlay);
 
     try {
       const result = await SetAssistantOverlay(nextOverlay);
       setOverlayEnabled(result.overlay);
-      setStatus(result.message);
+      setStatus(result.overlay ? t.compactOverlay : t.exitOverlay);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setStatus(message || 'err: overlay mode failed');
+      setStatus(message || t.overlayFailed);
       console.error('err toggling overlay', err);
     }
   };
 
   const canLookup = consent && name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
-  const t = translations[language];
-
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,70,85,0.22),_transparent_34%),linear-gradient(135deg,_#07080d_0%,_#111827_55%,_#0e111a_100%)] text-slate-100">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">

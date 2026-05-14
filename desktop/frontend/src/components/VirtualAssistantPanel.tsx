@@ -49,7 +49,7 @@ export const VirtualAssistantPanel = ({
 
     <div className="mt-6 grid gap-3 sm:grid-cols-2">
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Map
+        {t.map}
         <select
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           onChange={(event) => onMapNameChange(event.target.value)}
@@ -63,7 +63,7 @@ export const VirtualAssistantPanel = ({
         </select>
       </label>
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Agent
+        {t.agent}
         <select
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           onChange={(event) => onAgentChange(event.target.value)}
@@ -77,30 +77,30 @@ export const VirtualAssistantPanel = ({
         </select>
       </label>
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Side
+        {t.side}
         <select
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           onChange={(event) => onSideChange(event.target.value)}
           value={side}
         >
-          <option value="attack">Attack</option>
-          <option value="defense">Defense</option>
-          <option value="both">Both</option>
+          <option value="attack">{t.attack}</option>
+          <option value="defense">{t.defense}</option>
+          <option value="both">{t.both}</option>
         </select>
       </label>
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Phase
+        {t.phase}
         <select
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           onChange={(event) => onPhaseChange(event.target.value)}
           value={phase}
         >
-          <option value="prematch">Pre-match</option>
-          <option value="ingame">In-game</option>
+          <option value="prematch">{t.prematch}</option>
+          <option value="ingame">{t.ingame}</option>
         </select>
       </label>
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Credits
+        {t.credits}
         <input
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           min="0"
@@ -110,14 +110,14 @@ export const VirtualAssistantPanel = ({
         />
       </label>
       <label className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-        Previous round
+        {t.previousRound}
         <select
           className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/70"
           onChange={(event) => onPreviousOutcomeChange(event.target.value)}
           value={previousOutcome}
         >
-          <option value="win">Win</option>
-          <option value="loss">Loss</option>
+          <option value="win">{t.win}</option>
+          <option value="loss">{t.loss}</option>
         </select>
       </label>
     </div>

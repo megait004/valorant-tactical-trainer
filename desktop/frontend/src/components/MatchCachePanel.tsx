@@ -1,13 +1,5 @@
-import type { MatchCachePanelProps } from './types';
 import { useMemo, useState } from 'react';
-
-const plannedModules = [
-  'Consent-gated player lookup',
-  'Henrik API adapter with rate limit guard',
-  'SQLite local match storage',
-  'Evidence-based tactical reports',
-  'Training recommendations and drill tracking',
-];
+import type { MatchCachePanelProps } from './types';
 
 export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
   const [search, setSearch] = useState('');
@@ -28,13 +20,20 @@ export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
   }, [mapFilter, matches, search]);
   const selectedMatch =
     filteredMatches.find((match) => match.matchId === selectedMatchId) ?? filteredMatches[0] ?? matches[0] ?? null;
+  const plannedModules = [
+    t.moduleConsentLookup,
+    t.moduleProviderAdapter,
+    t.moduleLocalStorage,
+    t.moduleTacticalReports,
+    t.moduleTraining,
+  ];
 
   return (
     <aside className="rounded-[2rem] border border-white/10 bg-tactical-900/80 p-6 shadow-2xl shadow-black/30">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">{t.matchCache}</p>
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300">
-          {filteredMatches.length}/{matches.length} stored
+          {filteredMatches.length}/{matches.length} {t.stored}
         </span>
       </div>
       {matches.length > 0 ? (
@@ -64,16 +63,16 @@ export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
           {selectedMatch && (
             <section className="mt-5 rounded-3xl border border-tactical-cyan/20 bg-tactical-cyan/10 p-4">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-tactical-cyan">{t.selectedMatch}</p>
-              <h3 className="mt-2 text-xl font-black text-white">{selectedMatch.mapName || 'Unknown map'}</h3>
+              <h3 className="mt-2 text-xl font-black text-white">{selectedMatch.mapName || t.unknownMap}</h3>
               <p className="mt-1 text-sm text-slate-300">
-                {selectedMatch.agent || 'Unknown agent'} · {selectedMatch.mode || selectedMatch.queue || 'mode unknown'} ·{' '}
-                {selectedMatch.region || 'region unknown'}
+                {selectedMatch.agent || t.unknownAgent} · {selectedMatch.mode || selectedMatch.queue || t.unknownMode} ·{' '}
+                {selectedMatch.region || t.unknownRegion}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-200 sm:grid-cols-4">
                 <Detail label="K/D/A" value={`${selectedMatch.kills}/${selectedMatch.deaths}/${selectedMatch.assists}`} />
-                <Detail label="Rounds" value={selectedMatch.roundsPlayed || 0} />
+                <Detail label={t.rounds} value={selectedMatch.roundsPlayed || 0} />
                 <Detail label="HS" value={selectedMatch.headshots || 0} />
-                <Detail label="DMG" value={selectedMatch.damageMade || 0} />
+                <Detail label={t.damageShort} value={selectedMatch.damageMade || 0} />
               </div>
               <p className="mt-3 break-all text-xs text-slate-500">{selectedMatch.matchId}</p>
             </section>
@@ -93,9 +92,9 @@ export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="font-semibold text-white">{match.mapName || 'Unknown map'}</h3>
+                    <h3 className="font-semibold text-white">{match.mapName || t.unknownMap}</h3>
                     <p className="mt-1 text-sm text-slate-400">
-                      {match.agent || 'Unknown agent'} · {match.mode || match.queue || 'mode unknown'}
+                      {match.agent || t.unknownAgent} · {match.mode || match.queue || t.unknownMode}
                     </p>
                   </div>
                   <span className="rounded-full bg-tactical-red/15 px-3 py-1 text-xs font-black text-tactical-red">
@@ -103,9 +102,9 @@ export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-400">
-                  <span>{match.roundsPlayed || 0} rounds</span>
+                  <span>{match.roundsPlayed || 0} {t.rounds}</span>
                   <span>{match.headshots || 0} HS</span>
-                  <span>{match.damageMade || 0} dmg</span>
+                  <span>{match.damageMade || 0} {t.damageShort}</span>
                 </div>
               </button>
             ))}
@@ -120,7 +119,7 @@ export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => {
               </span>
               <div>
                 <h3 className="font-semibold text-white">{module}</h3>
-                <p className="mt-1 text-sm text-slate-400">planned vertical slice</p>
+                <p className="mt-1 text-sm text-slate-400">{t.plannedVerticalSlice}</p>
               </div>
             </div>
           ))}
