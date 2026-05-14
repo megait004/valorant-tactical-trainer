@@ -9,7 +9,9 @@ export const translations = {
     assistantBadge: 'no memory reading',
     assistantButton: 'Get tactical cards',
     assistantLoading: 'Loading assistant...',
+    assistantNotice: 'Recommended based on your selected map, agent, side, and phase.',
     assistantSubtitle: 'Safe pre-match & in-game cards',
+    compactOverlay: 'Compact overlay',
     checkCore: 'Check Go core',
     clearExpiredCache: 'Clear expired cache',
     consentGate: 'Consent gate',
@@ -20,6 +22,7 @@ export const translations = {
       'The app uses Henrik unofficial VALORANT API, stores imported data locally in SQLite, and only fetches account data after the consent checkbox is confirmed.',
     currentPlayer: 'current player',
     economyManager: 'Economy Manager',
+    exitOverlay: 'Exit overlay',
     exportJson: 'Export JSON',
     exportNote: 'Export excludes the saved API key value and raw provider payloads.',
     findings: 'Findings',
@@ -47,6 +50,8 @@ export const translations = {
     tacticalReport: 'Tactical report',
     trainingRecommendations: 'Training recommendations',
     virtualAssistant: 'Virtual Tactical Assistant',
+    overlaySafety:
+      'Overlay mode only keeps this app window on top and resizes it. It does not inject into VALORANT or read game memory.',
   },
   vi: {
     apiKey: 'API key',
@@ -56,7 +61,9 @@ export const translations = {
     assistantBadge: 'không đọc bộ nhớ game',
     assistantButton: 'Lấy thẻ chiến thuật',
     assistantLoading: 'Đang tải trợ lý...',
+    assistantNotice: 'Gợi ý dựa trên map, agent, phe và giai đoạn mà bạn chọn.',
     assistantSubtitle: 'Thẻ an toàn cho pre-match & in-game',
+    compactOverlay: 'Overlay thu gọn',
     checkCore: 'Kiểm tra Go core',
     clearExpiredCache: 'Xoá cache hết hạn',
     consentGate: 'Cổng xác nhận consent',
@@ -67,6 +74,7 @@ export const translations = {
       'App dùng Henrik unofficial VALORANT API, lưu dữ liệu import vào SQLite cục bộ, và chỉ fetch dữ liệu sau khi người dùng tick consent.',
     currentPlayer: 'người chơi hiện tại',
     economyManager: 'Quản lý kinh tế',
+    exitOverlay: 'Thoát overlay',
     exportJson: 'Xuất JSON',
     exportNote: 'File export không chứa API key đã lưu và raw payload từ provider.',
     findings: 'Nhận định',
@@ -94,6 +102,8 @@ export const translations = {
     tacticalReport: 'Báo cáo chiến thuật',
     trainingRecommendations: 'Gợi ý luyện tập',
     virtualAssistant: 'Trợ lý chiến thuật ảo',
+    overlaySafety:
+      'Overlay mode chỉ giữ cửa sổ app luôn nổi và thu nhỏ kích thước. Không inject vào VALORANT và không đọc bộ nhớ game.',
   },
 } as const;
 

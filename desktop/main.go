@@ -30,6 +30,7 @@ func main() {
 	analysisService := wailsiface.NewAnalysisService(store)
 	assistantService := wailsiface.NewAssistantService(store)
 	settingsService := wailsiface.NewSettingsService(store)
+	windowService := wailsiface.NewWindowService()
 
 	// Create application with options
 	err = wails.Run(&options.App{
@@ -43,6 +44,7 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			settingsService.Startup(ctx)
+			windowService.Startup(ctx)
 		},
 		Bind: []interface{}{
 			app,
@@ -52,6 +54,7 @@ func main() {
 			analysisService,
 			assistantService,
 			settingsService,
+			windowService,
 		},
 	})
 

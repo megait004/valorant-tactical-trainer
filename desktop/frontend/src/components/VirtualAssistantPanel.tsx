@@ -8,6 +8,7 @@ export const VirtualAssistantPanel = ({
   assistantLoading,
   credits,
   mapName,
+  overlayEnabled,
   onAgentChange,
   onCreditsChange,
   onMapNameChange,
@@ -15,6 +16,7 @@ export const VirtualAssistantPanel = ({
   onPreviousOutcomeChange,
   onQueryAssistant,
   onSideChange,
+  onToggleOverlay,
   phase,
   previousOutcome,
   result,
@@ -30,6 +32,19 @@ export const VirtualAssistantPanel = ({
       <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-200">
         {t.assistantBadge}
       </span>
+    </div>
+
+    <div className="mt-5 rounded-3xl border border-white/10 bg-black/20 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm leading-6 text-slate-300">{t.overlaySafety}</p>
+        <button
+          className="shrink-0 rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-black text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-300/10"
+          onClick={onToggleOverlay}
+          type="button"
+        >
+          {overlayEnabled ? t.exitOverlay : t.compactOverlay}
+        </button>
+      </div>
     </div>
 
     <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -126,6 +141,9 @@ export const VirtualAssistantPanel = ({
         </section>
 
         <div className="grid gap-3">
+          <p className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-100">
+            {t.assistantNotice}
+          </p>
           {result.cards.map((card) => (
             <article key={card.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
               <div className="flex flex-wrap items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-cyan-200/80">

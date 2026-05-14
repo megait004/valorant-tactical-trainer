@@ -140,6 +140,8 @@ wails build
 - Chọn kết quả round trước: Win hoặc Loss.
 - Bấm `Get tactical cards`.
 - App trả về tactical cards và Economy Manager advice.
+- Bấm `Compact overlay` để thu nhỏ cửa sổ app và giữ luôn nổi trên màn hình.
+- Bấm `Exit overlay` để quay lại cửa sổ app bình thường.
 
 Lưu ý an toàn:
 
@@ -147,6 +149,15 @@ Lưu ý an toàn:
 - Không đọc bộ nhớ `VALORANT.exe`.
 - Không inject overlay vào game.
 - Không tự động phát hiện trạng thái trận.
+- Overlay mode hiện tại là cửa sổ Wails always-on-top, không phải overlay inject vào game.
+
+Thông báo chọn agent theo map hoạt động như sau:
+
+- Người dùng chọn map và agent trong VTA.
+- App lọc các tactical cards local theo map/agent/side/phase.
+- Card `composition` nhắc đội hình/agent phù hợp.
+- Card `lineup` hiển thị hướng dẫn lineup dạng text cho agent như Sova, Viper, Brimstone.
+- Hiện chưa có ảnh/video lineup; cần asset tự tạo hoặc có quyền dùng để thêm ở story sau.
 
 ### 8. Export Dữ Liệu Local
 

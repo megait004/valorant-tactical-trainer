@@ -13,6 +13,7 @@ import {
   SaveLanguage,
   SaveSettings,
 } from '../wailsjs/go/wailsiface/SettingsService';
+import { SetAssistantOverlay } from '../wailsjs/go/wailsiface/WindowService';
 import type { main, wailsiface } from '../wailsjs/go/models';
 import { AppHeader } from './components/AppHeader';
 import { MatchCachePanel } from './components/MatchCachePanel';
@@ -30,6 +31,7 @@ const App = () => {
   const [report, setReport] = useState<wailsiface.ReportDTO | null>(null);
   const [settings, setSettings] = useState<wailsiface.SettingsDTO | null>(null);
   const [assistantResult, setAssistantResult] = useState<wailsiface.AssistantResultDTO | null>(null);
+  const [overlayEnabled, setOverlayEnabled] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
@@ -311,6 +313,21 @@ const App = () => {
     }
   };
 
+  const toggleOverlay = async () => {
+    const nextOverlay = !overlayEnabled;
+    setStatus(nextOverlay ? 'enabling assistant overlay...' : 'disabling assistant overlay...');
+
+    try {
+      const result = await SetAssistantOverlay(nextOverlay);
+      setOverlayEnabled(result.overlay);
+      setStatus(result.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: overlay mode failed');
+      console.error('err toggling overlay', err);
+    }
+  };
+
   const canLookup = consent && name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
   const t = translations[language];
 
@@ -355,6 +372,7 @@ const App = () => {
               assistantLoading={assistantLoading}
               credits={assistantCredits}
               mapName={assistantMap}
+              overlayEnabled={overlayEnabled}
               onAgentChange={setAssistantAgent}
               onCreditsChange={setAssistantCredits}
               onMapNameChange={setAssistantMap}
@@ -362,6 +380,7 @@ const App = () => {
               onPreviousOutcomeChange={setAssistantOutcome}
               onQueryAssistant={queryAssistant}
               onSideChange={setAssistantSide}
+              onToggleOverlay={toggleOverlay}
               phase={assistantPhase}
               previousOutcome={assistantOutcome}
               result={assistantResult}

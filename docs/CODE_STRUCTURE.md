@@ -200,7 +200,8 @@ desktop/internal/interface/wails/
 ├── match_service.go          # RefreshMatches/ListMatches
 ├── player_service.go         # LookupPlayer/GetCurrentPlayer
 ├── rank_service.go           # RefreshRank/LatestRank
-└── settings_service.go       # Settings/reset/cache/export/language
+├── settings_service.go       # Settings/reset/cache/export/language
+└── window_service.go         # Compact always-on-top assistant mode
 ```
 
 Layer này làm nhiệm vụ:
@@ -256,6 +257,7 @@ Gọi Wails bindings:
 - `LatestRank`
 - `GenerateReport`
 - `QueryAssistant`
+- `SetAssistantOverlay`
 - `GetSettings`
 - `SaveSettings`
 - `SaveLanguage`
@@ -313,6 +315,7 @@ React -> AnalysisService.GenerateReport -> SQLite matches -> domain analysis -> 
 
 ```text
 Manual query -> React -> AssistantService.QueryAssistant -> SQLite tactical_cards + economy rules -> React VTA panel
+Overlay toggle -> React -> WindowService.SetAssistantOverlay -> Wails WindowSetAlwaysOnTop/WindowSetSize
 ```
 
 ### Export Data
@@ -347,7 +350,7 @@ Test hiện có:
 
 ## Giới Hạn Hiện Tại
 
-- Chưa có overlay always-on-top riêng.
+- Đã có compact always-on-top VTA mode, nhưng chưa có transparent click-through overlay.
 - Chưa có hotkey global.
 - Chưa có manual live smoke với account thật trong tài liệu này.
 - VTA chưa có ảnh/video lineups do cần asset tự tạo hoặc có quyền sử dụng.
@@ -356,7 +359,7 @@ Test hiện có:
 ## Hướng Phát Triển
 
 - Match detail và filters theo map/agent/date.
-- Compact VTA window/always-on-top mode có nút tắt nhanh.
+- Transparent/click-through overlay chỉ nên làm nếu đã review kỹ anti-cheat và UX.
 - Import JSON local data.
 - Thêm tactical cards bằng asset tự thiết kế.
 - Demo script và installer packaging cho nghiệm thu.

@@ -60,6 +60,7 @@ export type VirtualAssistantPanelProps = {
   assistantLoading: boolean;
   credits: number;
   mapName: string;
+  overlayEnabled: boolean;
   phase: string;
   previousOutcome: string;
   result: wailsiface.AssistantResultDTO | null;
@@ -72,6 +73,7 @@ export type VirtualAssistantPanelProps = {
   onPreviousOutcomeChange: (value: string) => void;
   onQueryAssistant: () => void;
   onSideChange: (value: string) => void;
+  onToggleOverlay: () => void;
 };
 
 export type ReportPanelProps = {

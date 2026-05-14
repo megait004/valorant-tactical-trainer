@@ -131,6 +131,7 @@ Service methods should return UI-safe DTOs and errors that can be shown naturall
 - Use local file dialogs for export/import when implemented.
 - Build must pass `wails build` before release/demo.
 - Overlay/always-on-top assistant mode requires a separate story and must include a visible quick-close control.
+- Implemented assistant overlay mode is a compact always-on-top Wails window. It is not a game-injected overlay.
 
 ## UI Direction
 

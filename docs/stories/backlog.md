@@ -35,3 +35,4 @@ This backlog tracks the initial Valorant Tactical Trainer buildout. Create detai
 | US-015 | E05 | Virtual tactical assistant MVP | high-risk | implemented |
 | US-016 | E06 | Language switcher and user docs | normal | implemented |
 | US-017 | E06 | Match filter and inline detail | normal | implemented |
+| US-018 | E06 | Safe assistant overlay mode | high-risk | implemented |

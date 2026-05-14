@@ -569,6 +569,21 @@ export namespace wailsiface {
 	        this.message = source["message"];
 	    }
 	}
+	
+	export class WindowModeResult {
+	    overlay: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new WindowModeResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.overlay = source["overlay"];
+	        this.message = source["message"];
+	    }
+	}
 
 }
 
