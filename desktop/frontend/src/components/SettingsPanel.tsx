@@ -71,9 +71,6 @@ export const SettingsPanel = ({
     <p className="mt-5 break-all rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-slate-500">
       SQLite: {settings?.dataPath || t.notLoaded}
     </p>
-    <p className="mt-3 text-xs leading-5 text-slate-500">
-      {t.exportNote}
-    </p>
   </aside>
 );
 
