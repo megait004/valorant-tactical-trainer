@@ -69,9 +69,9 @@ export const translations = {
     consentGate: 'Cổng xác nhận consent',
     consentText:
       'Tôi đồng ý lấy dữ liệu tài khoản người chơi này từ Henrik unofficial VALORANT API và lưu cục bộ trên máy để phân tích chiến thuật. Tôi hiểu app không yêu cầu tài khoản/mật khẩu Riot.',
-    consentTitle: 'Bắt đầu bằng consent rõ ràng trước khi fetch dữ liệu VALORANT.',
+    consentTitle: 'Trung tâm phân tích chiến thuật VALORANT ngay trên desktop.',
     consentDescription:
-      'App dùng Henrik unofficial VALORANT API, lưu dữ liệu import vào SQLite cục bộ, và chỉ fetch dữ liệu sau khi người dùng tick consent.',
+      'Theo dõi người chơi, lưu lịch sử trận, phân tích phong độ, xem gợi ý luyện tập và mở trợ lý chiến thuật ảo cho từng map/agent. Dữ liệu được xử lý cục bộ để phục vụ review và chuẩn bị trận đấu.',
     currentPlayer: 'người chơi hiện tại',
     economyManager: 'Quản lý kinh tế',
     exitOverlay: 'Thoát overlay',
