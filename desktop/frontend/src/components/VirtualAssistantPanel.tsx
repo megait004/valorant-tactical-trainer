@@ -24,27 +24,18 @@ export const VirtualAssistantPanel = ({
   t,
 }: VirtualAssistantPanelProps) => (
   <aside className="rounded-[2rem] border border-cyan-300/20 bg-cyan-950/20 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p className="text-xs font-black uppercase tracking-[0.35em] text-cyan-200/80">{t.virtualAssistant}</p>
         <h2 className="mt-2 text-2xl font-black text-white">{t.assistantSubtitle}</h2>
       </div>
-      <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-200">
-        {t.assistantBadge}
-      </span>
-    </div>
-
-    <div className="mt-5 rounded-3xl border border-white/10 bg-black/20 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-slate-300">{t.overlaySafety}</p>
-        <button
-          className="shrink-0 rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-black text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-300/10"
-          onClick={onToggleOverlay}
-          type="button"
-        >
-          {overlayEnabled ? t.exitOverlay : t.compactOverlay}
-        </button>
-      </div>
+      <button
+        className="shrink-0 rounded-full border border-cyan-300/40 px-4 py-2 text-sm font-black text-cyan-100 transition hover:-translate-y-0.5 hover:bg-cyan-300/10"
+        onClick={onToggleOverlay}
+        type="button"
+      >
+        {overlayEnabled ? t.exitOverlay : t.compactOverlay}
+      </button>
     </div>
 
     <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -162,11 +153,6 @@ export const VirtualAssistantPanel = ({
           ))}
         </div>
 
-        <div className="rounded-3xl border border-emerald-300/15 bg-emerald-300/10 p-4 text-xs leading-5 text-emerald-100/80">
-          {result.safetyNotes.map((note) => (
-            <p key={note}>{note}</p>
-          ))}
-        </div>
       </div>
     )}
   </aside>
