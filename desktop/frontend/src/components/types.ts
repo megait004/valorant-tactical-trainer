@@ -12,7 +12,6 @@ export type SetupPanelProps = {
   appInfo: main.AppInfo | null;
   apiKey: string;
   canLookup: boolean;
-  consent: boolean;
   currentPlayer: wailsiface.PlayerDTO | null;
   lookupLoading: boolean;
   lookupResult: wailsiface.LookupPlayerResult | null;
@@ -28,7 +27,6 @@ export type SetupPanelProps = {
   t: Translation;
   onApiKeyChange: (value: string) => void;
   onCheckCore: () => void;
-  onConsentChange: (value: boolean) => void;
   onGenerateReport: () => void;
   onLookupPlayer: () => void;
   onNameChange: (value: string) => void;

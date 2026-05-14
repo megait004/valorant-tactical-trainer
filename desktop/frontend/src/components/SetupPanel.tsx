@@ -5,7 +5,6 @@ export const SetupPanel = ({
   appInfo,
   apiKey,
   canLookup,
-  consent,
   currentPlayer,
   lookupLoading,
   lookupResult,
@@ -21,7 +20,6 @@ export const SetupPanel = ({
   t,
   onApiKeyChange,
   onCheckCore,
-  onConsentChange,
   onGenerateReport,
   onLookupPlayer,
   onNameChange,
@@ -83,16 +81,6 @@ export const SetupPanel = ({
         />
       </label>
     </div>
-
-    <label className="mt-6 flex gap-3 rounded-2xl border border-tactical-red/30 bg-tactical-red/10 p-4 text-sm leading-6 text-slate-200">
-      <input
-        checked={consent}
-        className="mt-1 h-4 w-4 accent-tactical-red"
-        onChange={(event) => onConsentChange(event.target.checked)}
-        type="checkbox"
-      />
-      <span>{t.consentText}</span>
-    </label>
 
     <div className="mt-6 flex flex-wrap gap-3">
       <button

@@ -43,7 +43,6 @@ const App = () => {
   const [assistantPhase, setAssistantPhase] = useState('prematch');
   const [assistantCredits, setAssistantCredits] = useState(3900);
   const [assistantOutcome, setAssistantOutcome] = useState('win');
-  const [consent, setConsent] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [matchLoading, setMatchLoading] = useState(false);
   const [rankLoading, setRankLoading] = useState(false);
@@ -167,7 +166,7 @@ const App = () => {
     setStatus(t.checkingConsentProvider);
 
     try {
-      const result = await LookupPlayer({ name, tag, region, consent, apiKey });
+      const result = await LookupPlayer({ name, tag, region, consent: true, apiKey });
       setLookupResult(result);
       setCurrentPlayer(result.player);
       const savedMatches = await ListMatches(result.player.puuid);
@@ -277,7 +276,6 @@ const App = () => {
       setName('');
       setTag('');
       setApiKey('');
-      setConsent(false);
       const refreshed = await GetSettings();
       setSettings(refreshed);
       setStatus(t.resetLocalData);
@@ -329,7 +327,7 @@ const App = () => {
     }
   };
 
-  const canLookup = consent && name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
+  const canLookup = name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,70,85,0.22),_transparent_34%),linear-gradient(135deg,_#07080d_0%,_#111827_55%,_#0e111a_100%)] text-slate-100">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">
@@ -339,7 +337,6 @@ const App = () => {
             appInfo={appInfo}
             apiKey={apiKey}
             canLookup={canLookup}
-            consent={consent}
             currentPlayer={currentPlayer}
             lookupLoading={lookupLoading}
             lookupResult={lookupResult}
@@ -347,7 +344,6 @@ const App = () => {
             name={name}
             onApiKeyChange={setApiKey}
             onCheckCore={checkCore}
-            onConsentChange={setConsent}
             onGenerateReport={generateReport}
             onLookupPlayer={lookupPlayer}
             onNameChange={setName}
