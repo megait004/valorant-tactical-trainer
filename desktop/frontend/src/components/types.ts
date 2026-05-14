@@ -1,7 +1,11 @@
 import type { main, wailsiface } from '../../wailsjs/go/models';
+import type { Language, Translation } from '../i18n';
 
 export type AppStatusProps = {
+  language: Language;
+  onLanguageChange: (value: Language) => void;
   status: string;
+  t: Translation;
 };
 
 export type SetupPanelProps = {
@@ -21,6 +25,7 @@ export type SetupPanelProps = {
   reportLoading: boolean;
   resetLoading: boolean;
   tag: string;
+  t: Translation;
   onApiKeyChange: (value: string) => void;
   onCheckCore: () => void;
   onConsentChange: (value: boolean) => void;
@@ -36,12 +41,14 @@ export type SetupPanelProps = {
 
 export type MatchCachePanelProps = {
   matches: wailsiface.MatchDTO[];
+  t: Translation;
 };
 
 export type SettingsPanelProps = {
   apiKey: string;
   loading: boolean;
   settings: wailsiface.SettingsDTO | null;
+  t: Translation;
   onApiKeyChange: (value: string) => void;
   onClearExpiredCache: () => void;
   onExportLocalData: () => void;
@@ -57,6 +64,7 @@ export type VirtualAssistantPanelProps = {
   previousOutcome: string;
   result: wailsiface.AssistantResultDTO | null;
   side: string;
+  t: Translation;
   onAgentChange: (value: string) => void;
   onCreditsChange: (value: number) => void;
   onMapNameChange: (value: string) => void;
@@ -68,4 +76,5 @@ export type VirtualAssistantPanelProps = {
 
 export type ReportPanelProps = {
   report: wailsiface.ReportDTO;
+  t: Translation;
 };

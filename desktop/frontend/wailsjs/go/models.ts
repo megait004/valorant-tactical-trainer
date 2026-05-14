@@ -515,6 +515,18 @@ export namespace wailsiface {
 	        this.message = source["message"];
 	    }
 	}
+	export class SaveLanguageInput {
+	    language: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SaveLanguageInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.language = source["language"];
+	    }
+	}
 	export class SaveSettingsInput {
 	    apiKey: string;
 	
@@ -529,6 +541,7 @@ export namespace wailsiface {
 	}
 	export class SettingsDTO {
 	    apiKeyConfigured: boolean;
+	    language: string;
 	    dataPath: string;
 	    cacheEntries: number;
 	    expiredCacheEntries: number;
@@ -545,6 +558,7 @@ export namespace wailsiface {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.apiKeyConfigured = source["apiKeyConfigured"];
+	        this.language = source["language"];
 	        this.dataPath = source["dataPath"];
 	        this.cacheEntries = source["cacheEntries"];
 	        this.expiredCacheEntries = source["expiredCacheEntries"];

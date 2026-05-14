@@ -18,6 +18,7 @@ export const SetupPanel = ({
   reportLoading,
   resetLoading,
   tag,
+  t,
   onApiKeyChange,
   onCheckCore,
   onConsentChange,
@@ -31,18 +32,13 @@ export const SetupPanel = ({
   onTagChange,
 }: SetupPanelProps) => (
   <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/30 backdrop-blur">
-    <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">Consent gate</p>
-    <h2 className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-white md:text-5xl">
-      Start with explicit player consent before any Valorant data fetch.
-    </h2>
-    <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
-      The app uses Henrik unofficial VALORANT API, stores imported data locally in SQLite, and only fetches account data
-      after the consent checkbox is confirmed.
-    </p>
+    <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">{t.consentGate}</p>
+    <h2 className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-white md:text-5xl">{t.consentTitle}</h2>
+    <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">{t.consentDescription}</p>
 
     <div className="mt-8 grid gap-4 md:grid-cols-2">
       <label className="space-y-2">
-        <span className="text-sm font-semibold text-slate-300">Riot name</span>
+        <span className="text-sm font-semibold text-slate-300">{t.riotName}</span>
         <input
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
           onChange={(event) => onNameChange(event.target.value)}
@@ -62,7 +58,7 @@ export const SetupPanel = ({
         />
       </label>
       <label className="space-y-2">
-        <span className="text-sm font-semibold text-slate-300">Region fallback</span>
+        <span className="text-sm font-semibold text-slate-300">{t.regionFallback}</span>
         <select
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-tactical-red"
           onChange={(event) => onRegionChange(event.target.value)}
@@ -77,7 +73,7 @@ export const SetupPanel = ({
         </select>
       </label>
       <label className="space-y-2">
-        <span className="text-sm font-semibold text-slate-300">API key optional</span>
+        <span className="text-sm font-semibold text-slate-300">{t.apiKeyOptional}</span>
         <input
           className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
           onChange={(event) => onApiKeyChange(event.target.value)}
@@ -95,10 +91,7 @@ export const SetupPanel = ({
         onChange={(event) => onConsentChange(event.target.checked)}
         type="checkbox"
       />
-      <span>
-        I consent to fetch this player's account data from Henrik unofficial VALORANT API and store it locally on this
-        machine for tactical analysis. I understand no Riot credentials are required.
-      </span>
+      <span>{t.consentText}</span>
     </label>
 
     <div className="mt-6 flex flex-wrap gap-3">
@@ -108,14 +101,14 @@ export const SetupPanel = ({
         onClick={onLookupPlayer}
         type="button"
       >
-        {lookupLoading ? 'Looking up...' : 'Lookup player'}
+        {lookupLoading ? t.lookupLoading : t.lookupPlayer}
       </button>
       <button
         className="rounded-full bg-tactical-red px-5 py-3 text-sm font-bold text-white shadow-lg shadow-red-950/40 transition hover:-translate-y-0.5 hover:bg-red-400"
         onClick={onCheckCore}
         type="button"
       >
-        Check Go core
+        {t.checkCore}
       </button>
       <button
         className="rounded-full border border-tactical-cyan/40 px-5 py-3 text-sm font-bold text-tactical-cyan transition hover:-translate-y-0.5 hover:bg-tactical-cyan/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -123,7 +116,7 @@ export const SetupPanel = ({
         onClick={onRefreshMatches}
         type="button"
       >
-        {matchLoading ? 'Refreshing...' : 'Refresh matches'}
+        {matchLoading ? 'Refreshing...' : t.refreshMatches}
       </button>
       <button
         className="rounded-full border border-emerald-300/40 px-5 py-3 text-sm font-bold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -131,7 +124,7 @@ export const SetupPanel = ({
         onClick={onRefreshRank}
         type="button"
       >
-        {rankLoading ? 'Refreshing rank...' : 'Refresh rank'}
+        {rankLoading ? 'Refreshing rank...' : t.refreshRank}
       </button>
       <button
         className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -139,7 +132,7 @@ export const SetupPanel = ({
         onClick={onGenerateReport}
         type="button"
       >
-        {reportLoading ? 'Analyzing...' : 'Generate report'}
+        {reportLoading ? 'Analyzing...' : t.generateReport}
       </button>
       <button
         className="rounded-full border border-red-400/40 px-5 py-3 text-sm font-bold text-red-200 transition hover:-translate-y-0.5 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -147,7 +140,7 @@ export const SetupPanel = ({
         onClick={onResetAllData}
         type="button"
       >
-        {resetLoading ? 'Resetting...' : 'Reset local data'}
+        {resetLoading ? 'Resetting...' : t.resetLocalData}
       </button>
     </div>
 
@@ -155,7 +148,7 @@ export const SetupPanel = ({
       <div className="mt-8 space-y-4">
         {currentPlayer && (
           <div className="rounded-2xl border border-tactical-cyan/30 bg-tactical-cyan/10 p-5">
-            <p className="text-sm font-semibold text-tactical-cyan">current player</p>
+            <p className="text-sm font-semibold text-tactical-cyan">{t.currentPlayer}</p>
             <h3 className="mt-2 text-2xl font-bold text-white">
               {currentPlayer.name}#{currentPlayer.tag}
             </h3>
@@ -167,7 +160,7 @@ export const SetupPanel = ({
         )}
         {rank && (
           <div className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 p-5">
-            <p className="text-sm font-semibold text-emerald-200">latest rank</p>
+            <p className="text-sm font-semibold text-emerald-200">{t.latestRank}</p>
             <h3 className="mt-2 text-2xl font-bold text-white">{rank.tierName || 'Unrated / unknown'}</h3>
             <p className="mt-2 text-sm text-slate-300">
               {rank.rankingInTier} RR · elo {rank.elo || 'unknown'} · last game {rank.mmrChangeToLast > 0 ? '+' : ''}
@@ -199,6 +192,6 @@ export const SetupPanel = ({
       </div>
     )}
 
-    {report && <ReportPanel report={report} />}
+    {report && <ReportPanel report={report} t={t} />}
   </section>
 );

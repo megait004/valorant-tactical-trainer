@@ -31,6 +31,7 @@ type ResetResult struct {
 
 type SettingsDTO struct {
 	APIKeyConfigured    bool   `json:"apiKeyConfigured"`
+	Language            string `json:"language"`
 	DataPath            string `json:"dataPath"`
 	CacheEntries        int    `json:"cacheEntries"`
 	ExpiredCacheEntries int    `json:"expiredCacheEntries"`
@@ -43,6 +44,10 @@ type SettingsDTO struct {
 
 type SaveSettingsInput struct {
 	APIKey string `json:"apiKey"`
+}
+
+type SaveLanguageInput struct {
+	Language string `json:"language"`
 }
 
 type ClearCacheResult struct {
@@ -73,6 +78,15 @@ func (service *SettingsService) SaveSettings(input SaveSettingsInput) (SettingsD
 	}
 
 	return service.settingsDTO("api key saved locally")
+}
+
+func (service *SettingsService) SaveLanguage(input SaveLanguageInput) (SettingsDTO, error) {
+	language := normalizeLanguage(input.Language)
+	if err := service.store.SaveSetting(context.Background(), "language", language); err != nil {
+		return SettingsDTO{}, err
+	}
+
+	return service.settingsDTO("language saved")
 }
 
 func (service *SettingsService) ClearExpiredCache() (ClearCacheResult, error) {
@@ -147,6 +161,14 @@ func (service *SettingsService) settingsDTO(message string) (SettingsDTO, error)
 	if err != nil {
 		return SettingsDTO{}, err
 	}
+	language, hasLanguage, err := service.store.Setting(ctx, "language")
+	if err != nil {
+		return SettingsDTO{}, err
+	}
+	if !hasLanguage {
+		language = "en"
+	}
+	language = normalizeLanguage(language)
 	stats, err := service.store.Stats(ctx)
 	if err != nil {
 		return SettingsDTO{}, err
@@ -154,6 +176,7 @@ func (service *SettingsService) settingsDTO(message string) (SettingsDTO, error)
 
 	return SettingsDTO{
 		APIKeyConfigured:    hasAPIKey,
+		Language:            language,
 		DataPath:            service.store.Path(),
 		CacheEntries:        stats.CacheEntries,
 		ExpiredCacheEntries: stats.ExpiredCacheEntries,
@@ -163,4 +186,13 @@ func (service *SettingsService) settingsDTO(message string) (SettingsDTO, error)
 		Reports:             stats.Reports,
 		Message:             message,
 	}, nil
+}
+
+func normalizeLanguage(language string) string {
+	switch strings.ToLower(strings.TrimSpace(language)) {
+	case "vi":
+		return "vi"
+	default:
+		return "en"
+	}
 }

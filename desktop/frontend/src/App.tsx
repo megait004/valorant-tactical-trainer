@@ -10,6 +10,7 @@ import {
   ExportLocalData,
   GetSettings,
   ResetAllData,
+  SaveLanguage,
   SaveSettings,
 } from '../wailsjs/go/wailsiface/SettingsService';
 import type { main, wailsiface } from '../wailsjs/go/models';
@@ -18,6 +19,7 @@ import { MatchCachePanel } from './components/MatchCachePanel';
 import { SetupPanel } from './components/SetupPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { VirtualAssistantPanel } from './components/VirtualAssistantPanel';
+import { getLanguage, translations, type Language } from './i18n';
 
 const App = () => {
   const [appInfo, setAppInfo] = useState<main.AppInfo | null>(null);
@@ -28,6 +30,7 @@ const App = () => {
   const [report, setReport] = useState<wailsiface.ReportDTO | null>(null);
   const [settings, setSettings] = useState<wailsiface.SettingsDTO | null>(null);
   const [assistantResult, setAssistantResult] = useState<wailsiface.AssistantResultDTO | null>(null);
+  const [language, setLanguage] = useState<Language>('en');
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [region, setRegion] = useState('ap');
@@ -53,6 +56,7 @@ const App = () => {
       try {
         const savedSettings = await GetSettings();
         setSettings(savedSettings);
+        setLanguage(getLanguage(savedSettings.language));
         const player = await GetCurrentPlayer();
         if (player) {
           setCurrentPlayer(player);
@@ -101,6 +105,22 @@ const App = () => {
       console.error('err saving settings', err);
     } finally {
       setSettingsLoading(false);
+    }
+  };
+
+  const changeLanguage = async (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    setStatus(nextLanguage === 'vi' ? 'đang lưu ngôn ngữ...' : 'saving language...');
+
+    try {
+      const result = await SaveLanguage({ language: nextLanguage });
+      setSettings(result);
+      setLanguage(getLanguage(result.language));
+      setStatus(nextLanguage === 'vi' ? 'đã lưu ngôn ngữ' : 'language saved');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(message || 'err: save language failed');
+      console.error('err saving language', err);
     }
   };
 
@@ -292,11 +312,12 @@ const App = () => {
   };
 
   const canLookup = consent && name.trim() !== '' && tag.trim() !== '' && !lookupLoading;
+  const t = translations[language];
 
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,70,85,0.22),_transparent_34%),linear-gradient(135deg,_#07080d_0%,_#111827_55%,_#0e111a_100%)] text-slate-100">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">
-        <AppHeader status={status} />
+        <AppHeader language={language} onLanguageChange={changeLanguage} status={status} t={t} />
         <div className="grid flex-1 gap-6 py-8 xl:grid-cols-[1fr_0.9fr]">
           <SetupPanel
             appInfo={appInfo}
@@ -326,6 +347,7 @@ const App = () => {
             reportLoading={reportLoading}
             resetLoading={resetLoading}
             tag={tag}
+            t={t}
           />
           <div className="space-y-6">
             <VirtualAssistantPanel
@@ -344,6 +366,7 @@ const App = () => {
               previousOutcome={assistantOutcome}
               result={assistantResult}
               side={assistantSide}
+              t={t}
             />
             <SettingsPanel
               apiKey={apiKey}
@@ -353,8 +376,9 @@ const App = () => {
               onExportLocalData={exportLocalData}
               onSaveSettings={saveSettings}
               settings={settings}
+              t={t}
             />
-            <MatchCachePanel matches={matches} />
+            <MatchCachePanel matches={matches} t={t} />
           </div>
         </div>
       </section>

@@ -31,6 +31,7 @@ This file maps product behavior to proof.
 | US-013 | Local settings panel manages API key presence, data stats, and expired cache cleanup | no | SQLite stats/delete setting/clear expired cache tests | manual not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-014 | Local data can be exported to privacy-aware JSON | no | SQLite export JSON test excludes API key and raw payloads | manual save dialog not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 | US-015 | Virtual Tactical Assistant provides safe local tactical cards and economy advice | economy tests and seed-card completeness tests | SQLite tactical card query test | manual UI smoke not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
+| US-016 | Core UI supports English/Vietnamese and docs explain usage/code structure | existing tests | Wails bindings compile for `SaveLanguage` | manual language smoke not run | `wails build` passed | implemented | `go test ./...`, `pnpm validate`, `wails build` passed |
 
 ## Evidence Rules
 

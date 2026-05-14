@@ -8,10 +8,10 @@ const plannedModules = [
   'Training recommendations and drill tracking',
 ];
 
-export const MatchCachePanel = ({ matches }: MatchCachePanelProps) => (
+export const MatchCachePanel = ({ matches, t }: MatchCachePanelProps) => (
   <aside className="rounded-[2rem] border border-white/10 bg-tactical-900/80 p-6 shadow-2xl shadow-black/30">
     <div className="flex items-center justify-between gap-4">
-      <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">Match cache</p>
+      <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">{t.matchCache}</p>
       <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300">{matches.length} stored</span>
     </div>
     {matches.length > 0 ? (

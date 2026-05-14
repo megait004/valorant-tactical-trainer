@@ -18,6 +18,10 @@ export function ResetAllData() {
   return window['go']['wailsiface']['SettingsService']['ResetAllData']();
 }
 
+export function SaveLanguage(arg1) {
+  return window['go']['wailsiface']['SettingsService']['SaveLanguage'](arg1);
+}
+
 export function SaveSettings(arg1) {
   return window['go']['wailsiface']['SettingsService']['SaveSettings'](arg1);
 }

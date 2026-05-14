@@ -11,6 +11,8 @@ export function GetSettings():Promise<wailsiface.SettingsDTO>;
 
 export function ResetAllData():Promise<wailsiface.ResetResult>;
 
+export function SaveLanguage(arg1:wailsiface.SaveLanguageInput):Promise<wailsiface.SettingsDTO>;
+
 export function SaveSettings(arg1:wailsiface.SaveSettingsInput):Promise<wailsiface.SettingsDTO>;
 
 export function Startup(arg1:context.Context):Promise<void>;

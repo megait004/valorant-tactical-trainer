@@ -19,15 +19,16 @@ export const VirtualAssistantPanel = ({
   previousOutcome,
   result,
   side,
+  t,
 }: VirtualAssistantPanelProps) => (
   <aside className="rounded-[2rem] border border-cyan-300/20 bg-cyan-950/20 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.35em] text-cyan-200/80">Virtual Tactical Assistant</p>
-        <h2 className="mt-2 text-2xl font-black text-white">Safe pre-match & in-game cards</h2>
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-cyan-200/80">{t.virtualAssistant}</p>
+        <h2 className="mt-2 text-2xl font-black text-white">{t.assistantSubtitle}</h2>
       </div>
       <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-200">
-        no memory reading
+        {t.assistantBadge}
       </span>
     </div>
 
@@ -55,7 +56,7 @@ export const VirtualAssistantPanel = ({
         >
           {agents.map((value) => (
             <option key={value || 'any'} value={value}>
-              {value || 'Any'}
+              {value || t.anyAgent}
             </option>
           ))}
         </select>
@@ -112,13 +113,13 @@ export const VirtualAssistantPanel = ({
       onClick={onQueryAssistant}
       type="button"
     >
-      {assistantLoading ? 'Loading assistant...' : 'Get tactical cards'}
+      {assistantLoading ? t.assistantLoading : t.assistantButton}
     </button>
 
     {result && (
       <div className="mt-6 space-y-4">
         <section className="rounded-3xl border border-amber-300/20 bg-amber-300/10 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-200">Economy Manager</p>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-200">{t.economyManager}</p>
           <h3 className="mt-2 text-xl font-black text-white">{result.economyAdvice.plan}</h3>
           <p className="mt-2 text-sm text-amber-50/90">{result.economyAdvice.summary}</p>
           <p className="mt-2 text-xs leading-5 text-amber-100/70">{result.economyAdvice.reminder}</p>

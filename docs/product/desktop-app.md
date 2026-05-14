@@ -102,6 +102,7 @@ Training plan screen:
 Settings screen:
 
 - API key.
+- Language switcher for English and Vietnamese.
 - Region.
 - Cache info.
 - Expired cache cleanup.

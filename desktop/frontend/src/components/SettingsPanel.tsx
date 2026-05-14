@@ -4,6 +4,7 @@ export const SettingsPanel = ({
   apiKey,
   loading,
   settings,
+  t,
   onApiKeyChange,
   onClearExpiredCache,
   onExportLocalData,
@@ -12,16 +13,16 @@ export const SettingsPanel = ({
   <aside className="rounded-[2rem] border border-white/10 bg-tactical-900/80 p-6 shadow-2xl shadow-black/30">
     <div className="flex items-start justify-between gap-4">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">Settings</p>
-        <h2 className="mt-3 text-2xl font-bold text-white">Local data controls</h2>
+        <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">{t.settings}</p>
+        <h2 className="mt-3 text-2xl font-bold text-white">{t.localDataControls}</h2>
       </div>
       <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300">
-        {settings?.apiKeyConfigured ? 'key saved' : 'no key'}
+        {settings?.apiKeyConfigured ? t.keySaved : t.noKey}
       </span>
     </div>
 
     <label className="mt-5 block space-y-2">
-      <span className="text-sm font-semibold text-slate-300">API key</span>
+      <span className="text-sm font-semibold text-slate-300">{t.apiKey}</span>
       <input
         className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-tactical-red"
         onChange={(event) => onApiKeyChange(event.target.value)}
@@ -38,7 +39,7 @@ export const SettingsPanel = ({
         onClick={onSaveSettings}
         type="button"
       >
-        {loading ? 'Saving...' : 'Save key'}
+        {loading ? 'Saving...' : t.saveKey}
       </button>
       <button
         className="rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -46,7 +47,7 @@ export const SettingsPanel = ({
         onClick={onClearExpiredCache}
         type="button"
       >
-        Clear expired cache
+        {t.clearExpiredCache}
       </button>
       <button
         className="rounded-full border border-emerald-300/40 px-4 py-2 text-sm font-bold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
@@ -54,7 +55,7 @@ export const SettingsPanel = ({
         onClick={onExportLocalData}
         type="button"
       >
-        Export JSON
+        {t.exportJson}
       </button>
     </div>
 
@@ -71,7 +72,7 @@ export const SettingsPanel = ({
       SQLite: {settings?.dataPath || 'not loaded'}
     </p>
     <p className="mt-3 text-xs leading-5 text-slate-500">
-      Export excludes the saved API key value and raw provider payloads.
+      {t.exportNote}
     </p>
   </aside>
 );
