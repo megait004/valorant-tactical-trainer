@@ -1,25 +1,29 @@
-# Local reference/vendor docs downloaded outside the app project
-/react/
-/wails/
-/go-valorant-api/
-/harness-experimental/
-/tailieuapivalorant.md
+# Build artifacts
+build/bin/
+build/windows/installer/
+build/darwin/
+build/linux/
 
-# Frontend dependencies/build outputs
-node_modules/
-desktop/frontend/node_modules/
-desktop/frontend/dist/
+# Frontend deps & build output
+frontend/node_modules/
+frontend/dist/
 
-# Wails build outputs
-desktop/build/bin/
+# Local secrets
+.env
+.env.local
+*.env.local
 
-# Local runtime data
-*.db
-*.sqlite
-*.sqlite3
-
-# OS/editor noise
-.DS_Store
-Thumbs.db
+# IDE
 .vscode/
 .idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data files (settings, cache, reports)
+settings.json
+last_report.json
+practice_progress.json
+practice_sessions.json
+tactical_plans.json
