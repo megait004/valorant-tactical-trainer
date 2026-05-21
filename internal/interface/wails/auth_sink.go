@@ -1,8 +1,8 @@
 package wailsiface
 
 import (
-	"valorant-tactical-trainer/desktop/internal/infrastructure/localstore"
 	"valorant-tactical-trainer/desktop/internal/infrastructure/riot"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/store"
 )
 
 // authSink gắn riot.Client.Login/Logout với SettingsStore + ReportStore.
@@ -14,8 +14,8 @@ import (
 //     của nick cũ.
 //   - Khi logout: clear PUUID/RiotID + xoá report cache.
 type authSink struct {
-	settings    *localstore.SettingsStore
-	reportStore *localstore.ReportStore
+	settings    *store.SettingsStore
+	reportStore *store.ReportStore
 }
 
 func (s *authSink) OnLogin(player riot.PlayerInfo) error {

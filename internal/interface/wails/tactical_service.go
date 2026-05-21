@@ -2,12 +2,12 @@ package wailsiface
 
 import (
 	"valorant-tactical-trainer/desktop/internal/domain/tactical"
-	"valorant-tactical-trainer/desktop/internal/infrastructure/localstore"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/store"
 )
 
 // TacticalService expose Map Catalog + Map Plan (markers, lines, notes) cho UI.
 type TacticalService struct {
-	store *localstore.TacticalPlanStore
+	store *store.TacticalPlanStore
 }
 
 func (s *TacticalService) ListMaps() []tactical.MapCatalogEntry {

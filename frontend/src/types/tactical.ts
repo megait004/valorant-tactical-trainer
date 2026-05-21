@@ -24,6 +24,10 @@ export type PlanMarker = {
   label: string
   x: number
   y: number
+  agentPortrait?: string
+  agentRole?: string
+  agentUuid?: string
+  abilitySlot?: string
 }
 
 export type PlanLine = {
@@ -45,5 +49,34 @@ export type MapPlan = {
   updatedAt: string
 }
 
-export type PlannerTool = 'marker' | 'line'
-export type MarkerKind = 'duelist' | 'initiator' | 'controller' | 'sentinel' | 'callout'
+export type PlannerTool = 'marker' | 'line' | 'agent'
+export type MarkerKind = 'duelist' | 'initiator' | 'controller' | 'sentinel' | 'callout' | 'agent'
+
+export type ValorantAbility = {
+  slot: string
+  displayName: string
+  description: string
+  displayIcon: string | null
+}
+
+export type ValorantAgentRole = {
+  uuid: string
+  displayName: string
+  description: string
+  displayIcon: string
+}
+
+export type ValorantAgent = {
+  uuid: string
+  displayName: string
+  description: string
+  displayIcon: string
+  displayIconSmall: string
+  bustPortrait: string | null
+  fullPortrait: string | null
+  minimapPortrait: string | null
+  background: string | null
+  backgroundGradientColors: string[]
+  role: ValorantAgentRole
+  abilities: ValorantAbility[]
+}

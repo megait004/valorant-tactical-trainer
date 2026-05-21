@@ -7,16 +7,16 @@ import (
 	"valorant-tactical-trainer/desktop/internal/domain/analysis"
 	datasettings "valorant-tactical-trainer/desktop/internal/domain/settings"
 	"valorant-tactical-trainer/desktop/internal/infrastructure/henrik"
-	"valorant-tactical-trainer/desktop/internal/infrastructure/localstore"
 	"valorant-tactical-trainer/desktop/internal/infrastructure/riot"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/store"
 )
 
 // AnalysisService chịu trách nhiệm fetch match history (Riot VAL-MATCH-V1
 // hoặc Henrik fallback), gọi rule engine (analysis.AnalyzePlayer) và LLM coach
 // để cá nhân hoá Recommendations.
 type AnalysisService struct {
-	store       *localstore.SettingsStore
-	reportStore *localstore.ReportStore
+	store       *store.SettingsStore
+	reportStore *store.ReportStore
 	henrik      *henrik.Client
 	riot        *riot.MatchClient
 	coach       analysis.Coach
@@ -95,7 +95,7 @@ func (s *AnalysisService) FetchLiveReport() (LiveAnalysisResult, error) {
 		FetchedAt: fetchedAt,
 		Message:   message,
 	}
-	if err := s.reportStore.SaveLastReport(localstore.StoredReport{
+	if err := s.reportStore.SaveLastReport(store.StoredReport{
 		Report:    live.Report,
 		Source:    live.Source,
 		Cached:    live.Cached,

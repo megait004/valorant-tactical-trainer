@@ -1,18 +1,20 @@
-// Package llm chứa adapter gọi LLM (Anthropic Claude / OpenAI / Google Gemini)
-// để cá nhân hoá Recommendations và bot AI chat. Nếu .env không có
-// LLM_API_KEY thì factory trả về nil — domain layer sẽ tự fallback template.
+// Package llm chứa adapter gọi LLM (hiện implement Google Gemini) để cá nhân
+// hoá Recommendations và bot AI chat. Nếu .env không có LLM_API_KEY thì
+// factory trả về nil — domain layer sẽ tự fallback template.
 //
 // Cấu trúc file:
 //
-//	coach.go            — Coach struct, factory, ChatMessage và Complete entry.
-//	prompts.go          — System prompts (defaultSystemPrompt, fullReportSystemPrompt).
-//	suggest.go          — SuggestRecommendations + SuggestFullReport (high-level).
-//	openai_provider.go  — Adapter OpenAI Chat Completions.
-//	anthropic_provider.go — Adapter Anthropic Messages.
-//	gemini_provider.go  — Adapter Google Gemini generateContent + retry 429.
-//	parser.go           — Sanitize JSON LLM trả về (trim, drop entry rỗng).
-//	cache.go            — Disk cache TTL theo provider+model+input.
-//	payload.go          — promptPayload gọn (snapshot + findings) để giảm token.
+//	coach.go           — Coach struct, factory (NewCoachFromEnv), Complete dispatcher.
+//	prompts.go         — System prompts (defaultSystemPrompt, fullReportSystemPrompt).
+//	suggest.go         — SuggestRecommendations + SuggestFullReport (analysis.Coach impl).
+//	gemini_provider.go — Adapter Google Gemini generateContent + retry 429.
+//	parser.go          — Sanitize JSON LLM trả về (trim, drop entry rỗng).
+//	cache.go           — Disk cache TTL theo provider+model+input.
+//	payload.go         — promptPayload gọn (snapshot + findings) để giảm token.
+//
+// Constants providerAnthropic/providerOpenAI được giữ để dùng cho detectProvider
+// (nhận diện key prefix) nhưng adapter tương ứng chưa implement; Complete sẽ
+// trả error rõ ràng nếu provider ngoài Gemini.
 package llm
 
 import (
@@ -25,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"valorant-tactical-trainer/desktop/internal/infrastructure/riot"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/env"
 )
 
 const (
@@ -76,13 +78,13 @@ func WithNow(now func() time.Time) Option  { return func(co *Coach) { co.now = n
 //	AIza...    → Gemini
 //	(còn lại)  → OpenAI
 func NewCoachFromEnv(opts ...Option) *Coach {
-	apiKey := strings.TrimSpace(riot.LoadEnvKey(envAPIKey))
+	apiKey := strings.TrimSpace(env.Load(envAPIKey))
 	if apiKey == "" {
 		return nil
 	}
-	provider := detectProvider(apiKey, riot.LoadEnvKey(envProvider))
-	model := pickModel(provider, riot.LoadEnvKey(envModel))
-	cacheTTL := parseCacheTTL(riot.LoadEnvKey(envCacheMinutes))
+	provider := detectProvider(apiKey, env.Load(envProvider))
+	model := pickModel(provider, env.Load(envModel))
+	cacheTTL := parseCacheTTL(env.Load(envCacheMinutes))
 
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -163,12 +165,10 @@ func (c *Coach) Complete(ctx context.Context, system string, messages []ChatMess
 		return "", errors.New("messages rỗng")
 	}
 	switch c.provider {
-	case providerOpenAI:
-		return c.callOpenAI(ctx, system, messages, jsonMode)
 	case providerGemini:
 		return c.callGemini(ctx, system, messages, jsonMode)
 	default:
-		return c.callAnthropic(ctx, system, messages)
+		return "", fmt.Errorf("LLM provider %q chưa được hỗ trợ (hiện chỉ implement Gemini)", c.provider)
 	}
 }
 

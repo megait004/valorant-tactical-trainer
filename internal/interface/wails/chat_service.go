@@ -10,7 +10,7 @@ import (
 
 	"valorant-tactical-trainer/desktop/internal/domain/analysis"
 	"valorant-tactical-trainer/desktop/internal/infrastructure/llm"
-	"valorant-tactical-trainer/desktop/internal/infrastructure/localstore"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/store"
 )
 
 // ChatService cung cấp endpoint cho icon bot AI ở UI: nhận message từ user,
@@ -19,7 +19,7 @@ import (
 // có context turn-by-turn.
 type ChatService struct {
 	coach       *llm.Coach
-	reportStore *localstore.ReportStore
+	reportStore *store.ReportStore
 
 	mu       sync.Mutex
 	messages []llm.ChatMessage

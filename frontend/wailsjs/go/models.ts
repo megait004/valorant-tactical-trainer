@@ -417,25 +417,6 @@ export namespace henrik {
 
 }
 
-export namespace localstore {
-	
-	export class PracticeProgressState {
-	    items: Record<string, boolean>;
-	    updatedAt: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new PracticeProgressState(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.items = source["items"];
-	        this.updatedAt = source["updatedAt"];
-	    }
-	}
-
-}
-
 export namespace practice {
 	
 	export class Session {
@@ -555,6 +536,25 @@ export namespace settings {
 	        this.matchCount = source["matchCount"];
 	        this.cacheTTLMinutes = source["cacheTTLMinutes"];
 	        this.lastUpdatedAt = source["lastUpdatedAt"];
+	    }
+	}
+
+}
+
+export namespace store {
+	
+	export class PracticeProgressState {
+	    items: Record<string, boolean>;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PracticeProgressState(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.items = source["items"];
+	        this.updatedAt = source["updatedAt"];
 	    }
 	}
 

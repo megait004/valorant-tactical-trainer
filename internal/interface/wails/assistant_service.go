@@ -3,14 +3,14 @@ package wailsiface
 import (
 	"valorant-tactical-trainer/desktop/internal/domain/analysis"
 	"valorant-tactical-trainer/desktop/internal/domain/assistant"
-	"valorant-tactical-trainer/desktop/internal/infrastructure/localstore"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/store"
 )
 
 // AssistantService expose Live Assistant (in-game tip) qua Wails. Engine giữ
 // state in-memory; reportStore dùng để load context khi start session.
 type AssistantService struct {
 	engine      *assistant.Engine
-	reportStore *localstore.ReportStore
+	reportStore *store.ReportStore
 }
 
 func (s *AssistantService) GetSessionState() assistant.SessionState {

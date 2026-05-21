@@ -2,8 +2,6 @@ package riot
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,19 +15,28 @@ import (
 
 	"valorant-tactical-trainer/desktop/internal/domain/analysis"
 	datasettings "valorant-tactical-trainer/desktop/internal/domain/settings"
+	"valorant-tactical-trainer/desktop/internal/infrastructure/env"
 )
 
-// MatchClient gọi VAL-MATCH-V1 (Riot chính thức) để lấy match history + match details
-// theo PUUID. Dùng cùng RGAPI key đã load từ .env.
+// MatchClient gọi VAL-MATCH-V1 (Riot chính thức) để lấy match list +
+// match detail theo PUUID. Dùng cùng RGAPI key trong .env như Client.
+//
+// Note: VAL-MATCH-V1 cần production-tier key. Dev key thường bị 403 → app
+// fallback Henrik (xem AnalysisService.fetchSnapshot).
 type MatchClient struct {
 	httpClient *http.Client
 	cacheDir   string
 	now        func() time.Time
-	mu         sync.Mutex
-	requests   []time.Time
-	baseHost   func(shard string) string
+
+	mu       sync.Mutex
+	requests []time.Time
+
+	// baseHost cho phép inject host trong test (dù chưa có test riêng).
+	baseHost func(shard string) string
 }
 
+// NewMatchClient tạo client production với HTTP timeout 15s và cache dir
+// riêng (tránh trộn với Henrik cache).
 func NewMatchClient() *MatchClient {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -43,7 +50,8 @@ func NewMatchClient() *MatchClient {
 	}
 }
 
-// MatchSnapshotResult là kết quả fetch match list + decode → PlayerSnapshot
+// MatchSnapshotResult là kết quả 1 lần fetch — giống henrik.SnapshotResult
+// nhưng giữ tên Riot riêng để code caller dễ phân biệt nguồn dữ liệu.
 type MatchSnapshotResult struct {
 	Snapshot  analysis.PlayerSnapshot `json:"snapshot"`
 	Source    string                  `json:"source"`
@@ -52,7 +60,7 @@ type MatchSnapshotResult struct {
 	Message   string                  `json:"message"`
 }
 
-// CanFetch kiểm tra điều kiện cần thiết
+// CanFetch validate các điều kiện cần thiết: consent, PUUID, API key.
 func (c *MatchClient) CanFetch(settings datasettings.DataSettings) error {
 	if !settings.ConsentPersonalData {
 		return errors.New("Chưa có consent — login lại để bật consent")
@@ -60,68 +68,16 @@ func (c *MatchClient) CanFetch(settings datasettings.DataSettings) error {
 	if strings.TrimSpace(settings.PUUID) == "" {
 		return errors.New("Thiếu PUUID — đăng nhập lại để lấy PUUID từ Riot")
 	}
-	if strings.TrimSpace(loadAPIKey()) == "" {
+	if strings.TrimSpace(env.Load("RIOT_API_KEY")) == "" {
 		return errors.New("Thiếu RIOT_API_KEY trong .env — paste key vào root project")
 	}
 	return nil
 }
 
-type matchlistResponse struct {
-	PUUID   string                `json:"puuid"`
-	History []matchlistHistoryRow `json:"history"`
-}
-
-type matchlistHistoryRow struct {
-	MatchID         string `json:"matchId"`
-	GameStartMillis int64  `json:"gameStartTimeMillis"`
-	QueueID         string `json:"queueId"`
-}
-
-type matchDetail struct {
-	MatchInfo    matchDetailInfo     `json:"matchInfo"`
-	Players      []matchDetailPlayer `json:"players"`
-	Teams        []matchDetailTeam   `json:"teams"`
-	RoundResults []json.RawMessage   `json:"roundResults"`
-}
-
-type matchDetailInfo struct {
-	MatchID  string `json:"matchId"`
-	MapID    string `json:"mapId"`
-	IsRanked bool   `json:"isRanked"`
-	QueueID  string `json:"queueId"`
-}
-
-type matchDetailPlayer struct {
-	PUUID           string           `json:"puuid"`
-	GameName        string           `json:"gameName"`
-	TagLine         string           `json:"tagLine"`
-	TeamID          string           `json:"teamId"`
-	CharacterID     string           `json:"characterId"`
-	Stats           matchDetailStats `json:"stats"`
-	CompetitiveTier int              `json:"competitiveTier"`
-}
-
-type matchDetailStats struct {
-	Score          int `json:"score"`
-	RoundsPlayed   int `json:"roundsPlayed"`
-	Kills          int `json:"kills"`
-	Deaths         int `json:"deaths"`
-	Assists        int `json:"assists"`
-	PlaytimeMillis int `json:"playtimeMillis"`
-	AbilityCasts   any `json:"abilityCasts"`
-}
-
-type matchDetailTeam struct {
-	TeamID       string `json:"teamId"`
-	Won          bool   `json:"won"`
-	RoundsPlayed int    `json:"roundsPlayed"`
-	RoundsWon    int    `json:"roundsWon"`
-}
-
-// FetchMatchSnapshot gọi VAL-MATCH-V1:
+// FetchMatchSnapshot gọi VAL-MATCH-V1 theo pipeline:
 //
 //	GET /val/match/v1/matchlists/by-puuid/{puuid}
-//	→ N matches mới nhất (lấy theo MatchCount)
+//	→ N matches mới nhất (lấy theo settings.MatchCount, max 20)
 //	GET /val/match/v1/matches/{matchId} cho từng match
 //	→ map về PlayerSnapshot.RecentMatches
 //
@@ -131,26 +87,15 @@ func (c *MatchClient) FetchMatchSnapshot(ctx context.Context, settings datasetti
 		return MatchSnapshotResult{}, err
 	}
 
-	apiKey := loadAPIKey()
+	apiKey := env.Load("RIOT_API_KEY")
 	host := c.baseHost(settings.Shard)
 	puuid := strings.TrimSpace(settings.PUUID)
-
-	listURL := fmt.Sprintf("https://%s/val/match/v1/matchlists/by-puuid/%s", host, puuid)
-	listCachePath := c.cachePath(listURL)
 	cacheTTL := time.Duration(settings.CacheTTLMinutes) * time.Minute
 
-	var listBody []byte
-	cachedList := false
-	if env, ok := c.readCache(listCachePath, cacheTTL); ok {
-		listBody = env.Body
-		cachedList = true
-	} else {
-		body, err := c.doGet(ctx, listURL, apiKey)
-		if err != nil {
-			return MatchSnapshotResult{}, err
-		}
-		listBody = body
-		c.writeCache(listCachePath, cacheEnvelope{FetchedAt: c.now(), Body: body})
+	listURL := fmt.Sprintf("https://%s/val/match/v1/matchlists/by-puuid/%s", host, puuid)
+	listBody, cachedList, err := c.loadOrFetch(ctx, listURL, apiKey, cacheTTL)
+	if err != nil {
+		return MatchSnapshotResult{}, err
 	}
 
 	var list matchlistResponse
@@ -178,21 +123,13 @@ func (c *MatchClient) FetchMatchSnapshot(ctx context.Context, settings datasetti
 	allCached := cachedList
 	for _, row := range list.History[:limit] {
 		matchURL := fmt.Sprintf("https://%s/val/match/v1/matches/%s", host, row.MatchID)
-		matchCachePath := c.cachePath(matchURL)
-
-		var detailBody []byte
-		if env, ok := c.readCache(matchCachePath, cacheTTL); ok {
-			detailBody = env.Body
-		} else {
-			body, err := c.doGet(ctx, matchURL, apiKey)
-			if err != nil {
-				return MatchSnapshotResult{}, err
-			}
-			detailBody = body
-			c.writeCache(matchCachePath, cacheEnvelope{FetchedAt: c.now(), Body: body})
+		detailBody, detailCached, err := c.loadOrFetch(ctx, matchURL, apiKey, cacheTTL)
+		if err != nil {
+			return MatchSnapshotResult{}, err
+		}
+		if !detailCached {
 			allCached = false
 		}
-
 		summary, ok := decodeMatchDetail(detailBody, puuid)
 		if !ok {
 			continue
@@ -218,6 +155,22 @@ func (c *MatchClient) FetchMatchSnapshot(ctx context.Context, settings datasetti
 	}, nil
 }
 
+// loadOrFetch try cache trước, fallback HTTP GET nếu miss/expire. Trả về body
+// + flag cached để caller biết overall trạng thái snapshot.
+func (c *MatchClient) loadOrFetch(ctx context.Context, url, apiKey string, ttl time.Duration) (body []byte, cached bool, err error) {
+	path := c.cachePath(url)
+	if envlp, ok := c.readCache(path, ttl); ok {
+		return envlp.Body, true, nil
+	}
+	body, err = c.doGet(ctx, url, apiKey)
+	if err != nil {
+		return nil, false, err
+	}
+	c.writeCache(path, cacheEnvelope{FetchedAt: c.now(), Body: body})
+	return body, false, nil
+}
+
+// doGet là HTTP GET helper với rate limit + status code handling.
 func (c *MatchClient) doGet(ctx context.Context, url, apiKey string) ([]byte, error) {
 	if err := c.reserveRequest(); err != nil {
 		return nil, err
@@ -249,172 +202,6 @@ func (c *MatchClient) doGet(ctx context.Context, url, apiKey string) ([]byte, er
 	case http.StatusTooManyRequests:
 		return nil, errors.New("Riot 429 rate limit — thử lại sau")
 	default:
-		return nil, fmt.Errorf("Riot status %d: %s", resp.StatusCode, compactBodyMatch(body))
-	}
-}
-
-func (c *MatchClient) reserveRequest() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	now := c.now()
-	windowStart := now.Add(-1 * time.Minute)
-	kept := c.requests[:0]
-	for _, t := range c.requests {
-		if t.After(windowStart) {
-			kept = append(kept, t)
-		}
-	}
-	c.requests = kept
-
-	// Riot dev key: 20req/sec, 100req/2min. Cứ giới hạn 50/phút cho an toàn.
-	if len(c.requests) >= 50 {
-		return errors.New("local rate limit 50/min đã đầy, thử lại sau")
-	}
-	c.requests = append(c.requests, now)
-	return nil
-}
-
-type cacheEnvelope struct {
-	FetchedAt time.Time       `json:"fetchedAt"`
-	Body      json.RawMessage `json:"body"`
-}
-
-func (c *MatchClient) cachePath(url string) string {
-	hash := sha256.Sum256([]byte(url))
-	return filepath.Join(c.cacheDir, hex.EncodeToString(hash[:])+".json")
-}
-
-func (c *MatchClient) readCache(path string, ttl time.Duration) (cacheEnvelope, bool) {
-	if ttl <= 0 {
-		return cacheEnvelope{}, false
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return cacheEnvelope{}, false
-	}
-	var env cacheEnvelope
-	if err := json.Unmarshal(data, &env); err != nil {
-		return cacheEnvelope{}, false
-	}
-	if env.FetchedAt.IsZero() || c.now().Sub(env.FetchedAt) > ttl {
-		return cacheEnvelope{}, false
-	}
-	return env, true
-}
-
-func (c *MatchClient) writeCache(path string, env cacheEnvelope) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return
-	}
-	data, err := json.MarshalIndent(env, "", "  ")
-	if err != nil {
-		return
-	}
-	_ = os.WriteFile(path, data, 0o600)
-}
-
-// defaultMatchHost map shard → VAL platform host
-// (xem developer.riotgames.com/apis#val-match-v1)
-func defaultMatchHost(shard string) string {
-	switch strings.ToLower(strings.TrimSpace(shard)) {
-	case "na", "br", "latam":
-		return "na.api.riotgames.com"
-	case "eu":
-		return "eu.api.riotgames.com"
-	case "kr":
-		return "kr.api.riotgames.com"
-	case "ap":
-		return "ap.api.riotgames.com"
-	default:
-		return "ap.api.riotgames.com"
-	}
-}
-
-func decodeMatchDetail(body []byte, puuid string) (analysis.MatchSummary, bool) {
-	var detail matchDetail
-	if err := json.Unmarshal(body, &detail); err != nil {
-		return analysis.MatchSummary{}, false
-	}
-
-	var me *matchDetailPlayer
-	puuidLower := strings.ToLower(strings.TrimSpace(puuid))
-	for i := range detail.Players {
-		if strings.ToLower(detail.Players[i].PUUID) == puuidLower {
-			me = &detail.Players[i]
-			break
-		}
-	}
-	if me == nil {
-		return analysis.MatchSummary{}, false
-	}
-
-	rounds := me.Stats.RoundsPlayed
-	if rounds == 0 {
-		rounds = len(detail.RoundResults)
-	}
-	if rounds == 0 {
-		for _, t := range detail.Teams {
-			if t.RoundsPlayed > rounds {
-				rounds = t.RoundsPlayed
-			}
-		}
-	}
-	if rounds == 0 {
-		rounds = 1
-	}
-
-	won := false
-	for _, t := range detail.Teams {
-		if t.TeamID == me.TeamID && t.Won {
-			won = true
-			break
-		}
-	}
-
-	agent := agentNameFromUUID(me.CharacterID)
-	mapName := mapNameFromUUID(detail.MatchInfo.MapID)
-
-	return analysis.MatchSummary{
-		ID:              detail.MatchInfo.MatchID,
-		Map:             mapName,
-		Agent:           agent,
-		Role:            roleForAgent(agent),
-		Kills:           me.Stats.Kills,
-		Deaths:          me.Stats.Deaths,
-		Assists:         me.Stats.Assists,
-		RoundsPlayed:    rounds,
-		FirstBloods:     0,
-		FirstDeaths:     0,
-		HeadshotPercent: 0, // VAL-MATCH-V1 không trả body/leg/headshot trực tiếp; cần parse từ roundResults nếu cần.
-		Won:             won,
-	}, true
-}
-
-func compactBodyMatch(body []byte) string {
-	msg := strings.TrimSpace(string(body))
-	if msg == "" {
-		return "empty body"
-	}
-	msg = strings.Join(strings.Fields(msg), " ")
-	if len(msg) > 300 {
-		return msg[:300] + "..."
-	}
-	return msg
-}
-
-// roleForAgent giữ giống henrik client để output nhất quán.
-func roleForAgent(agent string) string {
-	switch strings.ToLower(agent) {
-	case "jett", "raze", "reyna", "neon", "phoenix", "yoru", "iso", "waylay":
-		return "duelist"
-	case "omen", "brimstone", "viper", "astra", "harbor", "clove":
-		return "controller"
-	case "sova", "fade", "breach", "skye", "kayo", "kay/o", "gekko", "tejo":
-		return "initiator"
-	case "cypher", "killjoy", "sage", "chamber", "deadlock", "vyse":
-		return "sentinel"
-	default:
-		return "unknown"
+		return nil, fmt.Errorf("Riot status %d: %s", resp.StatusCode, compactBody(body))
 	}
 }
