@@ -7,9 +7,8 @@
 //
 // Thứ tự ưu tiên:
 //  1. os.Getenv(name) — env thực sự của process
-//  2. .env file ở working directory
-//  3. .env file ở thư mục cha (khi chạy từ subfolder build/)
-//  4. .env file cạnh executable (binary release)
+//  2. .env file ở working directory và vài thư mục cha
+//  3. .env file cạnh executable và vài thư mục cha (vd build/bin → root)
 //
 // Format .env hỗ trợ: KEY=VALUE, comment bằng `#`, value có quote
 // ("..." hoặc '...'), optional `export ` prefix.
@@ -45,11 +44,10 @@ func readDotenvFromKnownLocations() map[string]string {
 
 	candidates := []string{}
 	if cwd, err := os.Getwd(); err == nil {
-		candidates = append(candidates, filepath.Join(cwd, ".env"))
-		candidates = append(candidates, filepath.Join(filepath.Dir(cwd), ".env"))
+		candidates = appendDotenvAncestors(candidates, cwd, 4)
 	}
 	if exe, err := os.Executable(); err == nil {
-		candidates = append(candidates, filepath.Join(filepath.Dir(exe), ".env"))
+		candidates = appendDotenvAncestors(candidates, filepath.Dir(exe), 4)
 	}
 
 	seen := map[string]struct{}{}
@@ -70,6 +68,20 @@ func readDotenvFromKnownLocations() map[string]string {
 		}
 	}
 	return result
+}
+
+func appendDotenvAncestors(candidates []string, start string, maxDepth int) []string {
+	dir := filepath.Clean(start)
+	for depth := 0; depth <= maxDepth && dir != "."; depth++ {
+		candidates = append(candidates, filepath.Join(dir, ".env"))
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return candidates
 }
 
 func parseDotenv(path string) (map[string]string, bool) {

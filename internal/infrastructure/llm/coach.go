@@ -12,9 +12,6 @@
 //	cache.go           — Disk cache TTL theo provider+model+input.
 //	payload.go         — promptPayload gọn (snapshot + findings) để giảm token.
 //
-// Constants providerAnthropic/providerOpenAI được giữ để dùng cho detectProvider
-// (nhận diện key prefix) nhưng adapter tương ứng chưa implement; Complete sẽ
-// trả error rõ ràng nếu provider ngoài Gemini.
 package llm
 
 import (
@@ -31,17 +28,12 @@ import (
 )
 
 const (
-	envProvider     = "LLM_PROVIDER"
 	envAPIKey       = "LLM_API_KEY"
 	envModel        = "LLM_MODEL"
 	envCacheMinutes = "LLM_CACHE_MINUTES"
 
-	providerAnthropic = "anthropic"
-	providerOpenAI    = "openai"
-	providerGemini    = "gemini"
+	providerGemini = "gemini"
 
-	defaultAnthropicModel = "claude-sonnet-4-5"
-	defaultOpenAIModel    = "gpt-4o-mini"
 	// gemini-2.5-flash-lite: free tier rộng (15 RPM, 1000 RPD), được mở cho hầu
 	// hết account. Nếu account user không có quyền, set LLM_MODEL trong .env.
 	defaultGeminiModel  = "gemini-2.5-flash-lite"
@@ -69,21 +61,14 @@ func WithHTTPClient(c *http.Client) Option { return func(co *Coach) { co.httpCli
 func WithCacheDir(dir string) Option       { return func(co *Coach) { co.cacheDir = dir } }
 func WithNow(now func() time.Time) Option  { return func(co *Coach) { co.now = now } }
 
-// NewCoachFromEnv đọc env (LLM_PROVIDER, LLM_API_KEY, LLM_MODEL...) qua
-// riot.LoadEnvKey để cũng hỗ trợ file .env. Trả nil nếu thiếu key.
-//
-// Auto detect provider theo prefix key:
-//
-//	sk-ant-... → Anthropic
-//	AIza...    → Gemini
-//	(còn lại)  → OpenAI
+// NewCoachFromEnv đọc env (LLM_API_KEY, LLM_MODEL...) qua env.Load để cũng hỗ
+// trợ file .env. Trả nil nếu thiếu key. App hiện chỉ dùng Google Gemini.
 func NewCoachFromEnv(opts ...Option) *Coach {
 	apiKey := strings.TrimSpace(env.Load(envAPIKey))
 	if apiKey == "" {
 		return nil
 	}
-	provider := detectProvider(apiKey, env.Load(envProvider))
-	model := pickModel(provider, env.Load(envModel))
+	model := pickModel(env.Load(envModel))
 	cacheTTL := parseCacheTTL(env.Load(envCacheMinutes))
 
 	cacheDir, err := os.UserCacheDir()
@@ -93,7 +78,7 @@ func NewCoachFromEnv(opts ...Option) *Coach {
 
 	c := &Coach{
 		httpClient:   &http.Client{Timeout: defaultTimeout},
-		provider:     provider,
+		provider:     providerGemini,
 		apiKey:       apiKey,
 		model:        model,
 		cacheDir:     filepath.Join(cacheDir, "Valorant Tactical Trainer", "llm"),
@@ -108,32 +93,11 @@ func NewCoachFromEnv(opts ...Option) *Coach {
 	return c
 }
 
-func detectProvider(apiKey, override string) string {
-	if v := strings.ToLower(strings.TrimSpace(override)); v != "" {
-		return v
-	}
-	switch {
-	case strings.HasPrefix(apiKey, "sk-ant-"):
-		return providerAnthropic
-	case strings.HasPrefix(apiKey, "AIza"):
-		return providerGemini
-	default:
-		return providerOpenAI
-	}
-}
-
-func pickModel(provider, override string) string {
+func pickModel(override string) string {
 	if v := strings.TrimSpace(override); v != "" {
 		return v
 	}
-	switch provider {
-	case providerAnthropic:
-		return defaultAnthropicModel
-	case providerGemini:
-		return defaultGeminiModel
-	default:
-		return defaultOpenAIModel
-	}
+	return defaultGeminiModel
 }
 
 func parseCacheTTL(value string) time.Duration {
@@ -154,9 +118,8 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// Complete là entry point chung gọi LLM provider. Trả plain text reply.
-// jsonMode = true thì ép response_format JSON (chỉ ảnh hưởng OpenAI/Gemini;
-// Anthropic luôn tự do format).
+// Complete là entry point gọi Gemini. Trả plain text reply.
+// jsonMode = true thì yêu cầu Gemini trả JSON.
 func (c *Coach) Complete(ctx context.Context, system string, messages []ChatMessage, jsonMode bool) (string, error) {
 	if c == nil {
 		return "", errors.New("coach chưa được khởi tạo (thiếu LLM_API_KEY trong .env)")
@@ -164,12 +127,7 @@ func (c *Coach) Complete(ctx context.Context, system string, messages []ChatMess
 	if len(messages) == 0 {
 		return "", errors.New("messages rỗng")
 	}
-	switch c.provider {
-	case providerGemini:
-		return c.callGemini(ctx, system, messages, jsonMode)
-	default:
-		return "", fmt.Errorf("LLM provider %q chưa được hỗ trợ (hiện chỉ implement Gemini)", c.provider)
-	}
+	return c.callGemini(ctx, system, messages, jsonMode)
 }
 
 // truncate cắt chuỗi quá dài cho error message đỡ ngợp.

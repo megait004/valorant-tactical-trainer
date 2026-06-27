@@ -15,8 +15,8 @@ import (
 
 // ChatService cung cấp endpoint cho icon bot AI ở UI: nhận message từ user,
 // ghép context (player + metrics + findings + breakdown) từ report cuối cùng
-// và gọi OpenAI/Claude qua llm.Coach. Lịch sử hội thoại giữ in-memory để LLM
-// có context turn-by-turn.
+// và gọi Gemini qua llm.Coach. Lịch sử hội thoại giữ in-memory để LLM có
+// context turn-by-turn.
 type ChatService struct {
 	coach       *llm.Coach
 	reportStore *store.ReportStore

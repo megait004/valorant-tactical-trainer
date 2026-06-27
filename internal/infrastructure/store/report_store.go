@@ -22,12 +22,12 @@ type ReportStore struct {
 }
 
 func NewReportStore() (*ReportStore, error) {
-	configDir, err := os.UserConfigDir()
+	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 
-	return &ReportStore{path: filepath.Join(configDir, "Valorant Tactical Trainer", "last_report.json")}, nil
+	return &ReportStore{path: filepath.Join(wd, "last_report.json")}, nil
 }
 
 func NewReportStoreAt(path string) *ReportStore {

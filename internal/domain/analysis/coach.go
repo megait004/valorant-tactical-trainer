@@ -2,10 +2,8 @@ package analysis
 
 import "context"
 
-// Coach là cổng để cá nhân hoá nội dung text trong Report bằng dịch vụ ngoài
-// (LLM). Domain không biết Coach được implement bằng gì — có thể là OpenAI,
-// Claude, Gemini hoặc local model. Implementation nằm trong
-// internal/infrastructure/llm.
+// Coach là cổng để cá nhân hoá nội dung text trong Report bằng Gemini.
+// Implementation nằm trong internal/infrastructure/llm.
 //
 // Có 2 method:
 //
