@@ -127,12 +127,12 @@ func buildMatchesURL(settings datasettings.DataSettings) string {
 }
 
 // applyAPIKey gắn header authorization cho Henrik authenticated tier.
-// Ưu tiên HENRIK_API_KEY (HDEV-) trong .env. Fallback settings.APIKey (user
-// paste qua UI). KHÔNG gửi RGAPI- (key Riot) sang Henrik — nó sẽ 401.
+// Ưu tiên settings.APIKey (user paste qua UI). Fallback HENRIK_API_KEY (HDEV-)
+// trong .env. KHÔNG gửi RGAPI- (key Riot) sang Henrik — nó sẽ 401.
 func applyAPIKey(req *http.Request, settings datasettings.DataSettings) {
-	key := strings.TrimSpace(env.Load("HENRIK_API_KEY"))
+	key := strings.TrimSpace(settings.APIKey)
 	if key == "" {
-		key = strings.TrimSpace(settings.APIKey)
+		key = strings.TrimSpace(env.Load("HENRIK_API_KEY"))
 	}
 	if key == "" || strings.HasPrefix(key, "RGAPI-") {
 		return
