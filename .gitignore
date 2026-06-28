@@ -6,7 +6,8 @@ build/linux/
 
 # Frontend deps & build output
 frontend/node_modules/
-frontend/dist/
+frontend/dist/*
+!frontend/dist/placeholder.txt
 
 # Local secrets
 # .env
