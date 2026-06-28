@@ -38,8 +38,4 @@ wails build -clean -nsis
 
 File build/installer nam trong `build/bin`.
 
-## CI/CD tren GitHub
 
-Workflow GitHub Actions nam tai `.github/workflows/build.yml`. Moi lan push len `main`, tao pull request hoac chay thu cong, GitHub se build ban Windows va upload artifact `valorant-tactical-trainer-windows` trong tab **Actions**.
-
-Neu tao tag dang `v1.0.0`, workflow se tao GitHub Release va dinh kem file build de nguoi dung tai truc tiep trong phan **Releases**.
