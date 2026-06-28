@@ -14,15 +14,33 @@ type TacticalPlanStore struct {
 }
 
 func NewTacticalPlanStore() (*TacticalPlanStore, error) {
-	configDir, err := os.UserConfigDir()
+	appDir, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
-	return &TacticalPlanStore{path: filepath.Join(configDir, "Valorant Tactical Trainer", "tactical_plans.json")}, nil
+	path := filepath.Join(appDir, "tactical_plans.json")
+	migrateLegacyTacticalPlanFile(path)
+	return &TacticalPlanStore{path: path}, nil
 }
 
 func NewTacticalPlanStoreAt(path string) *TacticalPlanStore {
 	return &TacticalPlanStore{path: path}
+}
+
+func migrateLegacyTacticalPlanFile(path string) {
+	if _, err := os.Stat(path); err == nil || !errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return
+	}
+	legacyPath := filepath.Join(configDir, "Valorant Tactical Trainer", "tactical_plans.json")
+	data, err := os.ReadFile(legacyPath)
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(path, data, 0o600)
 }
 
 type tacticalPlansFile struct {

@@ -1,0 +1,84 @@
+name: Build Desktop App
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install Wails CLI
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+          "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          winget install NSIS.NSIS --silent --accept-source-agreements --accept-package-agreements
+          $nsisPath = "${env:ProgramFiles(x86)}\NSIS"
+          if (Test-Path $nsisPath) {
+            $nsisPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Test Go packages
+        run: go test ./...
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: wails build -clean -nsis
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: valorant-tactical-trainer-windows
+          path: build/bin/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag build/bin/* --clobber
+          } else {
+            gh release create $tag build/bin/* --title $tag --notes "Automated Windows build from GitHub Actions."
+          }
